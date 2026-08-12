@@ -51,34 +51,17 @@ play_musicsv --playlist='./example.musicsv'
 ### 2. Provide Text Argument Directly:
 ```bash
 play_musicsv \
-'| NYIDAM SARI                | Lala Atila, Ageng Music Official                  |' \
-'| Rondo Kempling             | Lala Widy, Ageng Music, Global Musik Era Digital  |' \
-'| Sotya                      | Lala Atila, Ageng Music, Global Musik Era Digital |' \
-'| Lali Janjine               | Deni Kristiani, Langgeng Music Digital            |' \
-'| Yen Ing Tawang Ono Lintang | Ina Alah Alah, Langgeng Music Digital             |' \
-'| SOTYA                      | KURNIA RAHMA, Mahesa Official                     |' \
-'| Ireng Manis                | Intan Chacha, Langgeng Music Digital              |' \
+'NYIDAM SARI                | Lala Atila, Ageng Music Official                 ' \
+'Rondo Kempling             | Lala Widy, Ageng Music, Global Musik Era Digital ' \
+'Sotya                      | Lala Atila, Ageng Music, Global Musik Era Digital' \
+'Lali Janjine               | Deni Kristiani, Langgeng Music Digital           ' \
+'Yen Ing Tawang Ono Lintang | Ina Alah Alah, Langgeng Music Digital            ' \
+'SOTYA                      | KURNIA RAHMA, Mahesa Official                    ' \
+'Ireng Manis                | Intan Chacha, Langgeng Music Digital             ' \
 #
 ```
 
-### 3. Provide Path to Custom `.musicsv` File:
-Create your own file named `your-playlist.musicsv`:
-```text
-'| NYIDAM SARI                | Lala Atila, Ageng Music Official                  |' \
-'| Rondo Kempling             | Lala Widy, Ageng Music, Global Musik Era Digital  |' \
-'| Sotya                      | Lala Atila, Ageng Music, Global Musik Era Digital |' \
-'| Lali Janjine               | Deni Kristiani, Langgeng Music Digital            |' \
-'| Yen Ing Tawang Ono Lintang | Ina Alah Alah, Langgeng Music Digital             |' \
-'| SOTYA                      | KURNIA RAHMA, Mahesa Official                     |' \
-'| Ireng Manis                | Intan Chacha, Langgeng Music Digital              |' \
-```
-
-Then run the player with your custom playlist path:
-```bash
-play_musicsv --playlist='/path/to/your-playlist.musicsv'
-```
-
-### 4. Provide Path to `.csv` File:
+### 3. Provide Path to `.csv` File:
 Create your own file named `your-playlist.csv`:
 ```text
 NYIDAM SARI                | Lala Atila, Ageng Music Official
@@ -92,7 +75,7 @@ Ireng Manis                | Intan Chacha, Langgeng Music Digital
 
 Then run the player with your custom playlist path:
 ```bash
-play_musicsv --playlist='/path/to/your-playlist.csv'
+play_musicsv --playlist="$HOME/path/to/your-playlist.csv"
 ```
 
 ---
