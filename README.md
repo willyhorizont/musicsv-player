@@ -16,9 +16,9 @@ This project is OS-agnostic and will work on any Linux environment (including Te
 <details>
 <summary><b>Click to expand installation command for your OS</b></summary>
 
-* **Fedora KDE**: `sudo dnf upgrade --refresh -y && sudo dnf install python3 ffmpeg mpv nodejs -y && pip install --upgrade yt-dlp`
-* **Debian**: `sudo apt update && sudo apt upgrade -y && sudo apt install python3 python3-pip ffmpeg mpv nodejs -y && pip install --upgrade yt-dlp --break-system-packages`
-* **Termux**: `pkg update && pkg install python ffmpeg mpv nodejs -y && pip install --upgrade yt-dlp && termux-setup-storage`
+* **Fedora KDE**: `sudo dnf upgrade --refresh -y && sudo dnf install python3 ffmpeg mpv nodejs -y && pip install --upgrade yt-dlp && yt-dlp --rm-cache-dir && source ~/.bashrc`
+* **Debian**: `sudo apt update && sudo apt upgrade -y && sudo apt install python3 python3-pip ffmpeg mpv nodejs -y && pip install --upgrade yt-dlp --break-system-packages && yt-dlp --rm-cache-dir && source ~/.bashrc`
+* **Termux**: `pkg update && pkg install python ffmpeg mpv nodejs -y && pip install --upgrade yt-dlp && yt-dlp --rm-cache-dir && source ~/.bashrc && termux-setup-storage`
 </details>
 
 ## Installation
