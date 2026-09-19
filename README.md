@@ -13,19 +13,33 @@ This project runs inside a container environment using **Docker**. All system de
 ### 1. Set Up the Project Directory
 Clone or download this project, then make sure you are working in your root project folder:
 ```bash
-cd ~/Codes/musicsv-player
+cd ~/musicsv-player
 ```
 
 ### 2. Add Alias to Host Machine
 Add the alias to your `~/.bashrc` file so you can summon the player instantly from any folder on your host machine:
 
 ```bash
-echo "alias playmusicsv=\"\$HOME/Codes/musicsv-player/run.sh\"" >> ~/.bashrc
+echo "alias playmusicsv=\"\$HOME/musicsv-player/run.sh\"" >> ~/.bashrc
 ```
 
 Apply the changes immediately by reloading your shell configuration:
 ```bash
 source ~/.bashrc
+```
+
+## Termux User
+```bash
+git clone https://github.com/willyhorizont/musicsv-player.git
+pkg update -y && pkg upgrade -y
+pkg install -y --reinstall python python-pip libexpat ffmpeg mpv nodejs
+rm -rf ~/.cache/pip
+pip install --upgrade --reinstall yt-dlp --break-system-packages
+yt-dlp --rm-cache-dir
+termux-setup-storage
+echo "alias playmusicsv=\"\$HOME/musicsv-player/musicsv-player.sh\"" >> ~/.bashrc
+source ~/.bashrc
+playmusicsv --playlist="$HOME/musicsv-player/example.csv"
 ```
 
 ## Usage

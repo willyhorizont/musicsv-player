@@ -1,3 +1,6 @@
+[Last updated: 19 Sep 2026 @ 01:36 PM][version: 0.0.7]
+re add termux;
+
 [Last updated: 19 Sep 2026 @ 01:05 PM][version: 0.0.6]
 containerized program;
 
