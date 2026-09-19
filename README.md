@@ -34,7 +34,7 @@ git clone https://github.com/willyhorizont/musicsv-player.git
 pkg update -y && pkg upgrade -y
 pkg install -y --reinstall python python-pip libexpat ffmpeg mpv nodejs
 rm -rf ~/.cache/pip
-pip install --upgrade --reinstall yt-dlp --break-system-packages
+pip install --upgrade --force-reinstall --break-system-packages yt-dlp
 yt-dlp --rm-cache-dir
 termux-setup-storage
 echo "alias playmusicsv=\"\$HOME/musicsv-player/musicsv-player.sh\"" >> ~/.bashrc

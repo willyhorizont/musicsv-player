@@ -1,3 +1,6 @@
+[Last updated: 19 Sep 2026 @ 01:48 PM][version: 0.0.8]
+update termux command;
+
 [Last updated: 19 Sep 2026 @ 01:36 PM][version: 0.0.7]
 re add termux;
 
