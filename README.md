@@ -2,34 +2,18 @@
 
 No more storing songs in mp3s, no more storing songs playlists in cloud services, just store it as plain old CSV-like text files and stream your music.  
 
-## Requirements
-
-This project runs inside a container environment using **Docker**. All system dependencies (like `mpv`, `ffmpeg`, `yt-dlp`, and `Node.js`) are packaged neatly inside the container, keeping your host machine completely clean.
-
-* **[Docker](https://docker.com)** — Containerization platform to build and run the player environment.
-
-## Installation
-
-### 1. Set Up the Project Directory
-Clone or download this project, then make sure you are working in your root project folder:
+## Installation/Updates (Desktop x86) * [Docker](https://docker.com) required
 ```bash
-cd ~/musicsv-player
-```
-
-### 2. Add Alias to Host Machine
-Add the alias to your `~/.bashrc` file so you can summon the player instantly from any folder on your host machine:
-
-```bash
-echo "alias playmusicsv=\"\$HOME/musicsv-player/run.sh\"" >> ~/.bashrc
-```
-
-Apply the changes immediately by reloading your shell configuration:
-```bash
+rm -rf "$HOME/musicsv-player"
+git clone https://github.com/willyhorizont/musicsv-player.git
+echo "alias playmusicsv=\"\$HOME/musicsv-player/run.sh\" \"\$HOME/musicsv-player/musicsv-player.sh\"" >> ~/.bashrc
 source ~/.bashrc
+playmusicsv --playlist="$HOME/musicsv-player/example.csv"
 ```
 
-## Termux User
+## Installation/Updates (Termux)
 ```bash
+rm -rf "$HOME/musicsv-player"
 git clone https://github.com/willyhorizont/musicsv-player.git
 pkg update -y && pkg upgrade -y
 pkg install -y --reinstall python python-pip libexpat ffmpeg mpv nodejs
@@ -44,7 +28,7 @@ playmusicsv --playlist="$HOME/musicsv-player/example.csv"
 
 ## Usage
 
-*Note: When executing the player for the very first time, Docker will automatically download the lightweight `debian:trixie-slim` base image and prepare your environment. This step will happen invisibly behind the scenes.*
+*Note: When executing the player for the very first time on Desktop, Docker will automatically download the lightweight `debian:trixie-slim` base image and prepare your environment. This step will happen invisibly behind the scenes.*
 
 ### 1. Run the Included Example Playlist
 You can test the player immediately using the example playlist provided in the root of this project:

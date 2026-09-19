@@ -1,3 +1,8 @@
+[Last updated: 19 Sep 2026 @ 10:52 PM][version: 0.0.9]
+update Dockerfile;
+update run.sh;
+update README.md;
+
 [Last updated: 19 Sep 2026 @ 01:48 PM][version: 0.0.8]
 update termux command;
 

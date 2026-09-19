@@ -12,6 +12,3 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
 
 RUN pip install --upgrade yt-dlp --break-system-packages \
     && yt-dlp --rm-cache-dir
-
-COPY musicsv-player.sh /usr/local/bin/playmusicsv
-RUN chmod +x /usr/local/bin/playmusicsv
