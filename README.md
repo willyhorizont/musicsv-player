@@ -4,79 +4,75 @@ No more storing songs in mp3s, no more storing songs playlists in cloud services
 
 ## Requirements
 
-This project is OS-agnostic and will work on any Linux environment (including Termux on Android) as long as you have the following dependencies installed:
+This project runs inside a container environment using **Docker**. All system dependencies (like `mpv`, `ffmpeg`, `yt-dlp`, and `Node.js`) are packaged neatly inside the container, keeping your host machine completely clean.
 
-* **[mpv](https://github.com)** — The core media player.
-* **[ffmpeg](https://github.com)** — Multimedia framework backend for handling audio streams.
-* **[yt-dlp](https://github.com)** — YouTube extraction tool (Keep this updated!).
-* **[Node.js](https://nodejs.org)** — Required by `yt-dlp` as an external JavaScript runtime extractor.
-
-### Quick Installation Commands:
-
-<details>
-<summary><b>Click to expand installation command for your OS</b></summary>
-
-* **Fedora KDE**: `sudo dnf upgrade --refresh -y && sudo dnf install python3 ffmpeg mpv nodejs -y && pip install --upgrade yt-dlp && yt-dlp --rm-cache-dir && source ~/.bashrc`
-* **Debian**: `sudo apt update && sudo apt upgrade -y && sudo apt install python3 python3-pip ffmpeg mpv nodejs -y && pip install --upgrade yt-dlp --break-system-packages && yt-dlp --rm-cache-dir && source ~/.bashrc`
-* **Termux**: `pkg update && pkg install python ffmpeg mpv nodejs -y && pip install --upgrade yt-dlp && yt-dlp --rm-cache-dir && source ~/.bashrc && termux-setup-storage`
-</details>
+* **[Docker](https://docker.com)** — Containerization platform to build and run the player environment.
 
 ## Installation
 
-1. Open your shell configuration file using `nano`:
-   ```bash
-   nano ~/.bashrc
-   ```
+### 1. Set Up the Project Directory
+Clone or download this project, then make sure you are working in your root project folder:
+```bash
+cd ~/Codes/musicsv-player
+```
 
-2. Copy the complete code from `./musicsv-player.sh` and paste it at the very bottom of the file.
+### 2. Add Alias to Host Machine
+Add the alias to your `~/.bashrc` file so you can summon the player instantly from any folder on your host machine:
 
-3. Save and Exit `nano` using this exact button sequence:
-   * Press **`Ctrl + O`** (to write changes)
-   * Press **`Enter`** (to confirm the file name)
-   * Press **`Ctrl + X`** (to exit the editor safely)
+```bash
+echo "alias playmusicsv=\"\$HOME/Codes/musicsv-player/run.sh\"" >> ~/.bashrc
+```
 
-4. Reload your terminal configuration to apply the changes immediately:
-   ```bash
-   source ~/.bashrc
-   ```
+Apply the changes immediately by reloading your shell configuration:
+```bash
+source ~/.bashrc
+```
 
 ## Usage
+
+*Note: When executing the player for the very first time, Docker will automatically download the lightweight `debian:trixie-slim` base image and prepare your environment. This step will happen invisibly behind the scenes.*
 
 ### 1. Run the Included Example Playlist
 You can test the player immediately using the example playlist provided in the root of this project:
 ```bash
-play_musicsv --playlist='./example.musicsv'
+playmusicsv --playlist='./example.csv'
 ```
 
 ### 2. Provide Text Argument Directly:
 ```bash
-play_musicsv \
-'NYIDAM SARI                | Lala Atila, Ageng Music Official                 ' \
-'Rondo Kempling             | Lala Widy, Ageng Music, Global Musik Era Digital ' \
-'Sotya                      | Lala Atila, Ageng Music, Global Musik Era Digital' \
-'Lali Janjine               | Deni Kristiani, Langgeng Music Digital           ' \
-'Yen Ing Tawang Ono Lintang | Ina Alah Alah, Langgeng Music Digital            ' \
-'SOTYA                      | KURNIA RAHMA, Mahesa Official                    ' \
-'Ireng Manis                | Intan Chacha, Langgeng Music Digital             ' \
+playmusicsv \
+'NYIDAM SARI                ; Lala Atila, Ageng Music Official                 ' \
+'Rondo Kempling             ; Lala Widy, Ageng Music, Global Musik Era Digital ' \
+'Sotya                      ; Lala Atila, Ageng Music, Global Musik Era Digital' \
+'Lali Janjine               ; Deni Kristiani, Langgeng Music Digital           ' \
+'Yen Ing Tawang Ono Lintang ; Ina Alah Alah, Langgeng Music Digital            ' \
+'SOTYA                      ; KURNIA RAHMA, Mahesa Official                    ' \
+'Ireng Manis                ; Intan Chacha, Langgeng Music Digital             ' \
 #
 ```
 
 ### 3. Provide Path to `.csv` File:
-Create your own file named `your-playlist.csv`:
+Create your own file named `your-playlist.csv` using semicolons (`;`) as the separator column:
 ```text
-NYIDAM SARI                | Lala Atila, Ageng Music Official
-Rondo Kempling             | Lala Widy, Ageng Music, Global Musik Era Digital
-Sotya                      | Lala Atila, Ageng Music, Global Musik Era Digital
-Lali Janjine               | Deni Kristiani, Langgeng Music Digital
-Yen Ing Tawang Ono Lintang | Ina Alah Alah, Langgeng Music Digital
-SOTYA                      | KURNIA RAHMA, Mahesa Official
-Ireng Manis                | Intan Chacha, Langgeng Music Digital
+NYIDAM SARI                ; Lala Atila, Ageng Music Official
+Rondo Kempling             ; Lala Widy, Ageng Music, Global Musik Era Digital
+Sotya                      ; Lala Atila, Ageng Music, Global Musik Era Digital
+Lali Janjine               ; Deni Kristiani, Langgeng Music Digital
+Yen Ing Tawang Ono Lintang ; Ina Alah Alah, Langgeng Music Digital
+SOTYA                      ; KURNIA RAHMA, Mahesa Official
+Ireng Manis                ; Intan Chacha, Langgeng Music Digital
 ```
 
-Then run the player with your custom playlist path:
+Then run the player from any directory using your custom playlist path (supports absolute and dynamic relative locations mapped seamlessly from host to container):
 ```bash
-play_musicsv --playlist="$HOME/path/to/your-playlist.csv"
+playmusicsv --playlist="$HOME/Music/your-playlist.csv"
 ```
+
+## Controls
+Manage your playback smoothly right inside your terminal:
+* **`q`** — Skip to the **Next** track.
+* **`Ctrl + C`** — Jump back to the **Previous** track.
+* **`ESC`** — **Exit** the player safely.
 
 ---
 **Great projects behind this:**  
