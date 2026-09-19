@@ -5,8 +5,9 @@ No more storing songs in mp3s, no more storing songs playlists in cloud services
 ## Installation/Updates (Desktop x86) * [Docker](https://docker.com) required
 ```bash
 rm -rf "$HOME/musicsv-player"
+docker rmi willyhorizont/musicv-player
 git clone https://github.com/willyhorizont/musicsv-player.git
-echo "alias playmusicsv=\"\$HOME/musicsv-player/run.sh\" \"\$HOME/musicsv-player/musicsv-player.sh\"" >> ~/.bashrc
+echo "alias playmusicsv='\$HOME/musicsv-player/run.sh \$HOME/musicsv-player/musicsv-player.sh'" >> ~/.bashrc
 source ~/.bashrc
 playmusicsv --playlist="$HOME/musicsv-player/example.csv"
 ```

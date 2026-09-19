@@ -1,3 +1,7 @@
+[Last updated: 19 Sep 2026 @ 11:00 PM][version: 0.0.10]
+update run.sh, remove docker image version;
+update README.md, fix Installation/Updates (Desktop x86);
+
 [Last updated: 19 Sep 2026 @ 10:52 PM][version: 0.0.9]
 update Dockerfile;
 update run.sh;

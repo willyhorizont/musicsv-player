@@ -5,7 +5,7 @@ shift
 
 RD="$(dirname "$(realpath "$0")")"
 
-IMG='willyhorizont/musicv-player:0.0.7'
+IMG='willyhorizont/musicv-player'
 
 if [[ -z "$HOST_SCRIPT_PATH" || ! -f "$HOST_SCRIPT_PATH" ]]; then
     echo "Error: Host script path invalid or not provided!"
