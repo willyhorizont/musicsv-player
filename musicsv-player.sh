@@ -1,6 +1,6 @@
 #!/bin/bash
 
-IPC_SOCK="/tmp/mpv-socket"
+IPC_SOCK="${TMPDIR:-/tmp}/mpv-socket"
 fp=""
 peln=""
 eln=""
