@@ -1,3 +1,6 @@
+[Last updated: 20 Sep 2026 @ 10:58 PM][version: 0.1.10]
+update musicv-player.sh, update shuf;
+
 [Last updated: 20 Sep 2026 @ 08:53 PM][version: 0.1.9]
 update README.md, update termux command;
 

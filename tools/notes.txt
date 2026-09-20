@@ -9,5 +9,8 @@ source ~/.bashrc
 
 rm -rf "$HOME/musicsv-player" && cp -r "$HOME/Codes/musicsv-player/" "$HOME/musicsv-player/"
 
-playmusicsv "$HOME/musicsv-player/example.csv" --loop --shuffle
+mkdir -p "$HOME/Music/musicsv-playlist"
+cp -f "$HOME/musicsv-player/"*.csv "$HOME/Music/musicsv-playlist/"
+
+playmusicsv "$HOME/Music/musicsv-playlist/example.csv" --loop --shuffle
 ```

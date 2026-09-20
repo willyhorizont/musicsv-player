@@ -11,7 +11,10 @@ source ~/.bashrc
 
 rm -rf "$HOME/musicsv-player" && git clone https://github.com/willyhorizont/musicsv-player.git
 
-playmusicsv "$HOME/musicsv-player/example.csv" --loop --shuffle
+mkdir -p "$HOME/Music/musicsv-playlist"
+cp -f "$HOME/musicsv-player/"*.csv "$HOME/Music/musicsv-playlist/"
+
+playmusicsv "$HOME/Music/musicsv-playlist/example.csv" --loop --shuffle
 ```
 
 ## Installation/Updates (Termux)

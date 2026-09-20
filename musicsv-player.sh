@@ -163,20 +163,25 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
                 [fF]) send_mpv_cmd '["seek", 5, "relative"]' ;;
                 [lL])
                     [ "$show_pl" == "True" ] && show_pl="False" || show_pl="True"
+                    hs_refrsh_d="False"
                     clear
                     prt_ui $i
                     ;;
                 [rR])
                     if [ "$is_rptall" == "True" ]; then is_rptall="False"; else is_rptall="True"; is_rptone="False"; fi
+                    hs_refrsh_d="False"
                     clear
                     prt_ui $i
                     ;;
                 1)
                     if [ "$is_rptone" == "True" ]; then is_rptone="False"; else is_rptone="True"; is_rptall="False"; fi
+                    hs_refrsh_d="False"
                     clear
                     prt_ui $i
                     ;;
                 [xX])
+                    show_pl="False"
+                    hs_refrsh_d="False"
                     if [ "$is_shuf" == "True" ]; then
                         is_shuf="False"
                     else
