@@ -12,5 +12,5 @@ rm -rf "$HOME/musicsv-player" && cp -r "$HOME/Codes/musicsv-player/" "$HOME/musi
 mkdir -p "$HOME/Music/musicsv-playlist"
 cp -f "$HOME/musicsv-player/"*.csv "$HOME/Music/musicsv-playlist/"
 
-playmusicsv "$HOME/Music/musicsv-playlist/example.csv" --loop --shuffle
+playmusicsv "$HOME/Music/musicsv-playlist/example.csv" --rptall --shuf
 ```

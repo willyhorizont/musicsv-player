@@ -1,3 +1,8 @@
+[Last updated: 21 Sep 2026 @ 05:30 AM][version: 0.1.18]
+update keybind;
+remove hide pl on shuf;
+remove hide pl on song changes;
+
 [Last updated: 21 Sep 2026 @ 04:24 AM][version: 0.1.17]
 update screenshot;
 

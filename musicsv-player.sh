@@ -8,14 +8,14 @@ act_sig="none"
 is_rptall="False"
 is_rptone="False"
 is_shuf="False"
-show_pl="False"
+shw_pl="False"
 declare -a sgs=() lns=()
 
 for arg in "$@"; do
-    [[ "$arg" == "--loop" || "$arg" == "--rptall" ]] && is_rptall="True" && continue
+    [[ "$arg" == "--rptall" ]] && is_rptall="True" && continue
     [[ "$arg" == "--rptone" ]] && is_rptone="True" && continue
-    [[ "$arg" == "--shuffle" ]] && is_shuf="True" && continue
-    [[ "$arg" == "--show-playlist" ]] && show_pl="True" && continue
+    [[ "$arg" == "--shuf" ]] && is_shuf="True" && continue
+    [[ "$arg" == "--shwpl" ]] && shw_pl="True" && continue
     [[ "$arg" =~ ^-- ]] && continue
     [ -z "$fp" ] && fp="$arg" || { [[ ! "$arg" =~ ^[[:space:]]*# ]] && lns+=("$arg"); }
 done
@@ -109,7 +109,7 @@ prt_ui() {
 
     local mx_w=$(( $(tput cols 2>/dev/null || echo 56) - 3 ))
 
-    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.17'
+    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.18'
     printf "\033[H\033[J$abt\033[K\n"
     prt_sep "-"
     printf "%s\033[K\n" "$(get_anm_chnk "Query: " "${lns[$cur_idx]}" $mx_w)"
@@ -119,7 +119,7 @@ prt_ui() {
     printf "%s\033[K\n" "$(get_anm_chnk "Uploader: " "$cur_upl" $mx_w)"
     prt_sep "-"
     printf "%s\033[K\n" "$(get_anm_chnk "Playlist: " "\"$disp_fp\"" $mx_w)"
-    if [ "$show_pl" == "True" ]; then
+    if [ "$shw_pl" == "True" ]; then
         prt_sep "="
         
         local actv_stp=$1
@@ -163,13 +163,13 @@ prt_ui() {
     fi
     
     printf "RptAll:%s | RptOne:%s | Shuf:%s\033[K\n" \
-        "$([ "$is_rptall" == "True" ] && echo "Y" || echo "N")" \
-        "$([ "$is_rptone" == "True" ] && echo "Y" || echo "N")" \
-        "$([ "$is_shuf" == "True" ] && echo "Y" || echo "N")"
-    printf "[Z]=[Prev] [P]=[Play/Pause] [Y]=[Next]\033[K\n"
-    printf "[Q]=[Quit] [B]=[Rwnd] [F]=[Frwd]\033[K\n"
-    printf "[R]=[RptAll] [1]=[RptOne] [X]=[Shuf] [L]=[ShwLs]\033[K\n"
-    printf "[W]=[ScrlLsUp] [S]=[ScrlLsDwn]\033[K\n"
+        "$([ "$is_rptall" == "True" ] && echo "Ya" || echo "No")" \
+        "$([ "$is_rptone" == "True" ] && echo "Ya" || echo "No")" \
+        "$([ "$is_shuf" == "True" ] && echo "Ya" || echo "No")"
+    printf "[P]=[Quit] [N]=[Rwnd] [M]=[Frwd]\033[K\n"
+    printf "[Z]=[Prev] [X]=[Play/Pause] [C]=[Next]\033[K\n"
+    printf "[1]=[RptOne] [2]=[RptAll] [3]=[Shuf]\033[K\n"
+    printf "[U]=[ShwLs] [T]=[ScrlLsUp] [G]=[ScrlLsDwn]\033[K\n"
     prt_sep "-"
 }
 
@@ -204,7 +204,6 @@ clear
 i=0
 while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
     cur_idx=${ord[$i]} act_sig="none" cur_tit="Loading title..." cur_upl="Loading uploader info..." cur_sz="0MB" cur_prog="00:00:00 / 00:00:00"
-    show_pl="False"
     clear
     prt_ui $i; rm -f "$IPC_SOCK"
 
@@ -217,48 +216,23 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
         
         if [ $r_stat -eq 0 ]; then
             case "$k_inp" in
+                [pP]) act_sig="exit"; kill "$mpv_pid" 2>/dev/null; break ;;
+                [nN]) send_mpv_cmd '["seek", -5, "relative"]' ;;
+                [mM]) send_mpv_cmd '["seek", 5, "relative"]' ;;
                 [zZ]) act_sig="prev"; kill "$mpv_pid" 2>/dev/null; break ;;
-                [yY]) act_sig="next"; kill "$mpv_pid" 2>/dev/null; break ;;
-                [qQ]) act_sig="exit"; kill "$mpv_pid" 2>/dev/null; break ;;
-                [pP]) send_mpv_cmd '["cycle", "pause"]' ;;
-                [bB]) send_mpv_cmd '["seek", -5, "relative"]' ;;
-                [fF]) send_mpv_cmd '["seek", 5, "relative"]' ;;
-                [wW])
-                    if [ "$show_pl" == "True" ]; then
-                        if [ $(( i + pl_scroll )) -gt 0 ]; then
-                            pl_scroll=$(( pl_scroll - 1 ))
-                            clear
-                            prt_ui $i
-                        fi
-                    fi
-                    ;;
-                [sS])
-                    if [ "$show_pl" == "True" ]; then
-                        if [ $(( i + pl_scroll )) -lt $(( ${#lns[@]} - 1 )) ]; then
-                            pl_scroll=$(( pl_scroll + 1 ))
-                            clear
-                            prt_ui $i
-                        fi
-                    fi
-                    ;;
-                [lL])
-                    [ "$show_pl" == "True" ] && show_pl="False" || show_pl="True"
-                    pl_scroll=0
-                    clear
-                    prt_ui $i
-                    ;;
-                [rR])
-                    if [ "$is_rptall" == "True" ]; then is_rptall="False"; else is_rptall="True"; is_rptone="False"; fi
-                    clear
-                    prt_ui $i
-                    ;;
+                [xX]) send_mpv_cmd '["cycle", "pause"]' ;;
+                [cC]) act_sig="next"; kill "$mpv_pid" 2>/dev/null; break ;;
                 1)
                     if [ "$is_rptone" == "True" ]; then is_rptone="False"; else is_rptone="True"; is_rptall="False"; fi
                     clear
                     prt_ui $i
                     ;;
-                [xX])
-                    show_pl="False"
+                2)
+                    if [ "$is_rptall" == "True" ]; then is_rptall="False"; else is_rptall="True"; is_rptone="False"; fi
+                    clear
+                    prt_ui $i
+                    ;;
+                3)
                     pl_scroll=0
                     if [ "$is_shuf" == "True" ]; then
                         is_shuf="False"
@@ -268,6 +242,30 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
                     fi
                     clear
                     prt_ui $i
+                    ;;
+                [uU])
+                    [ "$shw_pl" == "True" ] && shw_pl="False" || shw_pl="True"
+                    pl_scroll=0
+                    clear
+                    prt_ui $i
+                    ;;
+                [tT])
+                    if [ "$shw_pl" == "True" ]; then
+                        if [ $(( i + pl_scroll )) -gt 0 ]; then
+                            pl_scroll=$(( pl_scroll - 1 ))
+                            clear
+                            prt_ui $i
+                        fi
+                    fi
+                    ;;
+                [gG])
+                    if [ "$shw_pl" == "True" ]; then
+                        if [ $(( i + pl_scroll )) -lt $(( ${#lns[@]} - 1 )) ]; then
+                            pl_scroll=$(( pl_scroll + 1 ))
+                            clear
+                            prt_ui $i
+                        fi
+                    fi
                     ;;
             esac
         fi

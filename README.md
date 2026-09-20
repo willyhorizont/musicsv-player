@@ -16,7 +16,7 @@ rm -rf "$HOME/musicsv-player" && git clone https://github.com/willyhorizont/musi
 mkdir -p "$HOME/Music/musicsv-playlist"
 cp -f "$HOME/musicsv-player/"*.csv "$HOME/Music/musicsv-playlist/"
 
-playmusicsv "$HOME/Music/musicsv-playlist/example.csv" --loop --shuffle
+playmusicsv "$HOME/Music/musicsv-playlist/example.csv" --rptall --shuf
 ```
 
 ## Installation/Updates (Termux)
@@ -38,7 +38,7 @@ rm -rf "$HOME/musicsv-player" && git clone https://github.com/willyhorizont/musi
 mkdir -p "$HOME/storage/music/musicsv-playlist"
 cp -f "$HOME/musicsv-player/"*.csv "$HOME/storage/music/musicsv-playlist/"
 
-playmusicsv "$HOME/storage/music/musicsv-playlist/example.csv" --loop --shuffle
+playmusicsv "$HOME/storage/music/musicsv-playlist/example.csv" --rptall --shuf
 ```
 
 ## Usage
