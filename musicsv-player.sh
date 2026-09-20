@@ -25,14 +25,18 @@ if [ -n "$fp" ]; then
     while IFS= read -r peln || [[ -n "$peln" ]]; do
         peln=$(echo "$peln" | sed "s/^'//; s/'[[:space:]]*\\\\*$//; s/'[[:space:]]*$//")
         [[ -z "$peln" || "$peln" =~ ^[[:space:]]*# ]] && continue
-        peln_cln=$(echo "$peln" | sed 's/[[:space:]]*;[[:space:]]*/ ; /g; s/[[:space:]]\+/ /g' | xargs)
+        peln_sfs="${peln//\'/\\\'}"
+        peln_sfd="${peln_sfs//\"/\\\"}"
+        peln_cln=$(echo "$peln_sfd" | sed 's/[[:space:]]*;[[:space:]]*/ ; /g; s/[[:space:]]\+/ /g' | xargs)
         lns+=("$peln_cln")
         eln=$(echo "$peln_cln" | sed 's/^[[:space:]]*;[[:space:]]*//; s/[[:space:]]*;[[:space:]]*$//' | xargs)
         sgs+=("ytdl://ytsearch:$eln")
     done < "$fp"
 else
     for el in "${lns[@]}"; do
-        eln_cln=$(echo "$el" | sed 's/[[:space:]]*;[[:space:]]*//; s/[[:space:]]\+/ /g' | xargs)
+        el_sfs="${el//\'/\\\'}"
+        el_sfd="${el_sfs//\"/\\\"}"
+        eln_cln=$(echo "$el_sfd" | sed 's/[[:space:]]*;[[:space:]]*/ ; /g; s/[[:space:]]\+/ /g' | xargs)
         sgs+=("ytdl://ytsearch:$eln_cln")
     done
 fi
@@ -66,6 +70,34 @@ prt_sep() {
     printf '%*s' "$(( $(tput cols 2>/dev/null || echo 56) - 3 ))" '' | tr ' ' "${1:-=}" ; printf "\033[K\n"
 }
 
+get_anm_chnk() {
+    local lb="$1"
+    local full_txt="$2"
+    local mx_w=$3
+    
+    local lb_len=${#lb}
+    local chnk_sz=$(( mx_w - lb_len ))
+    local tot_len=${#full_txt}
+    
+    if [ $tot_len -le $chnk_sz ]; then
+        printf "%s%s" "$lb" "$full_txt"
+    else
+        local num_chnks=$(( (tot_len + chnk_sz - 1) / chnk_sz ))
+        local trg_len=$(( num_chnks * chnk_sz ))
+        local pad_need=$(( trg_len - tot_len ))
+        local pd_txt="$full_txt"
+        if [ $pad_need -gt 0 ]; then
+            local pdg=$(printf '%*s' "$pad_need" '')
+            pd_txt="${full_txt}${pdg}"
+        fi
+        local anm_spd=2
+        local cur_chnk=$(( (ANM_TICK / anm_spd) % num_chnks ))
+        local sta_pos=$(( cur_chnk * chnk_sz ))
+        
+        printf "%s%s" "$lb" "${pd_txt:$sta_pos:$chnk_sz}"
+    fi
+}
+
 prt_ui() {
     local hst_home="${HOST_HOME:-$HOME}"
     local disp_fp="None"
@@ -75,19 +107,18 @@ prt_ui() {
         disp_fp="\$HOME/${fp#$HOME/}"
     fi
 
-    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.15'
+    local mx_w=$(( $(tput cols 2>/dev/null || echo 56) - 3 ))
+
+    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.16'
     printf "\033[H\033[J$abt\033[K\n"
     prt_sep "-"
-    printf "Currently Playing\033[K\n"
+    printf "%s\033[K\n" "$(get_anm_chnk "Query: " "${lns[$cur_idx]}" $mx_w)"
     prt_sep "-"
-    printf "Query: %s\033[K\n" "${lns[$cur_idx]}"
-    # printf "Query: %s\033[K\n" "${sgs[$cur_idx]}"
+    printf "%s\033[K\n" "$(get_anm_chnk "Title: " "$cur_tit" $mx_w)"
     prt_sep "-"
-    printf "Title: %s\033[K\n" "$cur_tit"
+    printf "%s\033[K\n" "$(get_anm_chnk "Uploader: " "$cur_upl" $mx_w)"
     prt_sep "-"
-    printf "Uploader: %s\033[K\n" "$cur_upl"
-    prt_sep "-"
-    printf "Playlist: \"%s\"\033[K\n" "$disp_fp"
+    printf "%s\033[K\n" "$(get_anm_chnk "Playlist: " "\"$disp_fp\"" $mx_w)"
     if [ "$show_pl" == "True" ]; then
         prt_sep "="
         
@@ -112,11 +143,13 @@ prt_ui() {
         
         for ((idx=sta_win; idx<=end_win; idx++)); do
             if [ $idx -ge 0 ] && [ $idx -lt $tot_lns ]; then
-                if [ ${ord[$idx]} -eq ${ord[$actv_stp]} ]; then
-                    printf "> ; %d ; %s\033[K\n" "$((idx + 1))" "${lns[${ord[$idx]}]}"
-                else
-                    printf "  ; %d ; %s\033[K\n" "$((idx + 1))" "${lns[${ord[$idx]}]}"
-                fi
+                local raw_itm="${lns[${ord[$idx]}]}"
+                
+                local prefix="  ; $((idx + 1)) ; "
+                [ ${ord[$idx]} -eq ${ord[$actv_stp]} ] && prefix="> ; $((idx + 1)) ; "
+                
+                printf "%s\033[K\n" "$(get_anm_chnk "$prefix" "$raw_itm" $mx_w)"
+                
                 if [ $idx -lt $end_win ] && [ $idx -lt $(( tot_lns - 1 )) ]; then
                     prt_sep "-"
                 fi
@@ -125,28 +158,41 @@ prt_ui() {
         prt_sep "="
     else
         prt_sep "-"
-        printf "Size: %s\033[K\n" "$cur_sz"
-        printf "%s\033[K\n" "$cur_prog"
+        printf "Size: %s\033[K | %s\033[K\n" "$cur_sz" "$cur_prog"
         prt_sep "-"
     fi
     
-    printf "RptAll:%s RptOne:%s Shuf:%s\033[K\n" \
+    printf "RptAll:%s | RptOne:%s | Shuf:%s\033[K\n" \
         "$([ "$is_rptall" == "True" ] && echo "Y" || echo "N")" \
         "$([ "$is_rptone" == "True" ] && echo "Y" || echo "N")" \
         "$([ "$is_shuf" == "True" ] && echo "Y" || echo "N")"
     printf "[Z]=[Prev] [P]=[Play/Pause] [Y]=[Next]\033[K\n"
-    printf "[Q]=[Quit] [B]=[Rvrs] [F]=[Frwd]\033[K\n"
+    printf "[Q]=[Quit] [B]=[Rwnd] [F]=[Frwd]\033[K\n"
     printf "[R]=[RptAll] [1]=[RptOne] [X]=[Shuf] [L]=[ShwLs]\033[K\n"
     printf "[W]=[ScrlLsUp] [S]=[ScrlLsDwn]\033[K\n"
     prt_sep "-"
 }
 
 q_prop() {
-    [ -S "$IPC_SOCK" ] && socat - "UNIX-CONNECT:$IPC_SOCK" 2>/dev/null <<< '{"command":["get_property","'"$1"'"]}' | python3 -c "import sys, json; d=json.loads(sys.stdin.read()); print(d.get('data') if d.get('data') is not None else '')" 2>/dev/null
+    if [ -S "$IPC_SOCK" ]; then
+        local cmd_pld
+        cmd_pld=$(python3 -c "import sys, json; print(json.dumps({'command': ['get_property', sys.stdin.read().strip()]}))" <<< "$1" 2>/dev/null)
+        if [ -n "$cmd_pld" ]; then
+            local raw_j
+            raw_j=$(socat - "UNIX-CONNECT:$IPC_SOCK" 2>/dev/null <<< "$cmd_pld")
+            if [ -n "$raw_j" ]; then
+                python3 -c "import sys, json; print(json.loads(sys.stdin.read()).get('data', ''))" <<< "$raw_j" 2>/dev/null
+            fi
+        fi
+    fi
 }
 
 send_mpv_cmd() {
-    [ -S "$IPC_SOCK" ] && printf "%s\n" "{\"command\": $1}" | socat - "UNIX-CONNECT:$IPC_SOCK" >/dev/null 2>&1
+    if [ -S "$IPC_SOCK" ]; then
+        local cmd_pld
+        cmd_pld=$(python3 -c "import sys, json; print(json.dumps({'command': json.loads(sys.stdin.read().strip())}))" <<< "$1" 2>/dev/null)
+        [ -n "$cmd_pld" ] && socat - "UNIX-CONNECT:$IPC_SOCK" >/dev/null 2>&1 <<< "$cmd_pld"
+    fi
 }
 
 fmt_tm() {
@@ -159,13 +205,12 @@ i=0
 while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
     cur_idx=${ord[$i]} act_sig="none" cur_tit="Loading title..." cur_upl="Loading uploader info..." cur_sz="0MB" cur_prog="00:00:00 / 00:00:00"
     show_pl="False"
-    hs_refrsh_d="False"
-    pl_scroll=0
     clear
     prt_ui $i; rm -f "$IPC_SOCK"
 
     mpv --no-video --ytdl-format=ba --msg-level=all=no --ytdl-raw-options-append=compat-options=no-live-chat --demuxer-lavf-o=reconnect=1,reconnect_at_eof=1,reconnect_streamed=1,reconnect_delay_max=5 --input-ipc-server="$IPC_SOCK" "${sgs[$cur_idx]}" >/dev/null 2>&1 &
     mpv_pid=$!
+    ANM_TICK=0
 
     while kill -0 "$mpv_pid" 2>/dev/null; do
         read -s -n1 -t 1 k_inp; r_stat=$?
@@ -199,7 +244,6 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
                 [lL])
                     [ "$show_pl" == "True" ] && show_pl="False" || show_pl="True"
                     pl_scroll=0
-                    hs_refrsh_d="False"
                     clear
                     prt_ui $i
                     ;;
@@ -215,7 +259,6 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
                     ;;
                 [xX])
                     show_pl="False"
-                    hs_refrsh_d="False"
                     pl_scroll=0
                     if [ "$is_shuf" == "True" ]; then
                         is_shuf="False"
@@ -238,26 +281,18 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
         [ -n "$u_val" ] && cur_upl="$u_val"
         
         cac_j=$(socat - "UNIX-CONNECT:$IPC_SOCK" 2>/dev/null <<< '{"command":["get_property","demuxer-cache-state"]}')
-        c_bytes=$(python3 -c "import sys, json; d=json.loads(sys.stdin.read()); print(d.get('data', {}).get('total-bytes',0))" <<< "$cac_j" 2>/dev/null)
-        [[ "$c_bytes" =~ ^[0-9]+$ ]] && [ "$c_bytes" -gt 0 ] && cur_sz="$((c_bytes / 1024 / 1024))MB" || cur_sz="0MB"
-        
+        if [ -n "$cac_j" ]; then
+            c_bytes=$(python3 -c "import sys, json; print(json.loads(sys.stdin.read()).get('data', {}).get('total-bytes',0))" <<< "$cac_j" 2>/dev/null)
+            [[ "$c_bytes" =~ ^[0-9]+$ ]] && [ "$c_bytes" -gt 0 ] && cur_sz="$((c_bytes / 1024 / 1024))MB" || cur_sz="0MB"
+        fi
         tmpos=$(q_prop "time-pos") dur=$(q_prop "duration")
         if [ -n "$tmpos" ] && [ -n "$dur" ]; then
             cur_prog="$(fmt_tm "$tmpos") / $(fmt_tm "$dur")"
         fi
-
-        if [ "$show_pl" == "False" ]; then
-            prt_ui $i
-        elif [ "$show_pl" == "True" ] && [ "$hs_refrsh_d" == "False" ]; then
-            if [ "$cur_tit" != "Loading title..." ] && [ "$cur_upl" != "Loading uploader info..." ]; then
-                prt_ui $i
-                hs_refrsh_d="True"
-            fi
-        fi
+        ANM_TICK=$(( ANM_TICK + 1 ))
+        prt_ui $i
     done
-
     wait "$mpv_pid" 2>/dev/null; rm -f "$IPC_SOCK"
-
     case "$act_sig" in
         "exit") clear; exit 0 ;;
         "prev") [ $i -gt 0 ] && i=$((i - 1)) || { printf "\n[!] First track!\n"; sleep 0.5; }; continue ;;

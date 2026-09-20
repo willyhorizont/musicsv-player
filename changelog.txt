@@ -1,3 +1,6 @@
+[Last updated: 21 Sep 2026 @ 04:06 AM][version: 0.1.16]
+add Marquee Chunking;
+
 [Last updated: 21 Sep 2026 @ 01:16 AM][version: 0.1.15]
 update pl UI;
 
