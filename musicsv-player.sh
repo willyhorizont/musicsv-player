@@ -109,7 +109,7 @@ prt_ui() {
 
     local mx_w=$(( $(tput cols 2>/dev/null || echo 56) - 3 ))
 
-    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.19'
+    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.20'
     printf "\033[H\033[J$abt\033[K\n"
     prt_sep "-"
     printf "%s\033[K\n" "$(get_anm_chnk "Query: " "${lns[$cur_idx]}" $mx_w)"
@@ -163,8 +163,8 @@ prt_ui() {
     fi
     
     printf "RptOne:%s | RptAll:%s | Shuf:%s\033[K\n" \
-        "$([ "$is_rptall" == "True" ] && echo "Ya" || echo "No")" \
         "$([ "$is_rptone" == "True" ] && echo "Ya" || echo "No")" \
+        "$([ "$is_rptall" == "True" ] && echo "Ya" || echo "No")" \
         "$([ "$is_shuf" == "True" ] && echo "Ya" || echo "No")"
     printf "[P]=[Quit] [N]=[Rwnd] [M]=[Frwd]\033[K\n"
     printf "[Z]=[Prev] [X]=[Play/Pause] [C]=[Next]\033[K\n"
