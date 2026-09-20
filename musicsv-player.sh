@@ -25,14 +25,15 @@ if [ -n "$fp" ]; then
     while IFS= read -r peln || [[ -n "$peln" ]]; do
         peln=$(echo "$peln" | sed "s/^'//; s/'[[:space:]]*\\\\*$//; s/'[[:space:]]*$//")
         [[ -z "$peln" || "$peln" =~ ^[[:space:]]*# ]] && continue
-        lns+=("$peln")
-        eln=$(echo "$peln" | sed 's/^[[:space:]]*;[[:space:]]*//; s/[[:space:]]*;[[:space:]]*$//' | xargs)
+        peln_cln=$(echo "$peln" | sed 's/[[:space:]]*;[[:space:]]*/ ; /g; s/[[:space:]]\+/ /g' | xargs)
+        lns+=("$peln_cln")
+        eln=$(echo "$peln_cln" | sed 's/^[[:space:]]*;[[:space:]]*//; s/[[:space:]]*;[[:space:]]*$//' | xargs)
         sgs+=("ytdl://ytsearch:$eln")
     done < "$fp"
 else
     for el in "${lns[@]}"; do
-        eln=$(echo "$el" | sed 's/^[[:space:]]*;[[:space:]]*//; s/[[:space:]]*;[[:space:]]*$//' | xargs)
-        sgs+=("ytdl://ytsearch:$eln")
+        eln_cln=$(echo "$el" | sed 's/[[:space:]]*;[[:space:]]*//; s/[[:space:]]\+/ /g' | xargs)
+        sgs+=("ytdl://ytsearch:$eln_cln")
     done
 fi
 
@@ -55,8 +56,8 @@ shuf() {
 
 [ "$is_shuf" == "True" ] && shuf -1
 
-cur_tit="Loading track title..."
-cur_upl="Loading artist info..."
+cur_tit="Loading title..."
+cur_upl="Loading uploader info..."
 cur_sz="0MB"
 cur_prog="00:00:00 / 00:00:00"
 
@@ -78,7 +79,13 @@ prt_ui() {
         prt_sep "="
         echo -e "Currently Playing\033[K"
         printf "Playlist: \"%s\"\033[K\n" "$disp_fp"
-        printf "Title: %s\033[K\nUploader: %s\033[K\n" "$cur_tit" "$cur_upl"
+        prt_sep "-"
+        printf "Query: %s\033[K\n" "${lns[$cur_idx]}"
+        # printf "Query: %s\033[K\n" "${sgs[$cur_idx]}"
+        prt_sep "-"
+        printf "Title: %s\033[K\n" "$cur_tit"
+        prt_sep "-"
+        printf "Uploader: %s\033[K\n" "$cur_upl"
         prt_sep "="
         for ((idx=0; idx<${#lns[@]}; idx++)); do
             if [ ${ord[$idx]} -eq ${ord[$1]} ]; then
@@ -94,7 +101,13 @@ prt_ui() {
         prt_sep "="
         echo -e "Currently Playing\033[K"
         printf "Playlist: \"%s\"\033[K\n" "$disp_fp"
-        printf "Title: %s\033[K\nUploader: %s\033[K\n" "$cur_tit" "$cur_upl"
+        prt_sep "-"
+        printf "Query: %s\033[K\n" "${lns[$cur_idx]}"
+        # printf "Query: %s\033[K\n" "${sgs[$cur_idx]}"
+        prt_sep "-"
+        printf "Title: %s\033[K\n" "$cur_tit"
+        prt_sep "-"
+        printf "Uploader: %s\033[K\n" "$cur_upl"
         prt_sep "-"
         printf "Size: %s\033[K\n" "$cur_sz"
         printf "%s\033[K\n" "$cur_prog"
@@ -128,14 +141,13 @@ clear
 
 i=0
 while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
-    cur_idx=${ord[$i]} act_sig="none" cur_tit="Loading track title..." cur_upl="Loading artist info..." cur_sz="0MB" cur_prog="00:00:00 / 00:00:00"
+    cur_idx=${ord[$i]} act_sig="none" cur_tit="Loading title..." cur_upl="Loading uploader info..." cur_sz="0MB" cur_prog="00:00:00 / 00:00:00"
+    show_pl="False"
     clear
     prt_ui $i; rm -f "$IPC_SOCK"
 
     mpv --no-video --ytdl-format=ba --msg-level=all=no --ytdl-raw-options-append=compat-options=no-live-chat --demuxer-lavf-o=reconnect=1,reconnect_at_eof=1,reconnect_streamed=1,reconnect_delay_max=5 --input-ipc-server="$IPC_SOCK" "${sgs[$cur_idx]}" >/dev/null 2>&1 &
     mpv_pid=$!
-
-    hs_refrsh_d="False"
 
     while kill -0 "$mpv_pid" 2>/dev/null; do
         read -s -n1 -t 1 k_inp; r_stat=$?
@@ -195,12 +207,6 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
 
         if [ "$show_pl" == "False" ]; then
             prt_ui $i
-        elif [ "$hs_refrsh_d" == "False" ]; then
-            if [ "$cur_tit" != "Loading track title..." ] && \
-               [ "$cur_upl" != "Loading artist info..." ]; then
-                prt_ui $i
-                hs_refrsh_d="True"
-            fi
         fi
     done
 

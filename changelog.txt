@@ -1,3 +1,6 @@
+[Last updated: 20 Sep 2026 @ 08:13 PM][version: 0.1.6]
+update musicv-player.sh, turn off show_pl on song changes, update query, show query;
+
 [Last updated: 20 Sep 2026 @ 07:35 PM][version: 0.1.5]
 update musicv-player.sh, fix UI on show_pl;
 
