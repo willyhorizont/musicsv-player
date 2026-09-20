@@ -64,7 +64,9 @@ prt_ui() {
     local disp_fp="None"
     [ -n "$fp" ] && disp_fp=$(echo "$fp" | sed -E 's|/home/[^/]+|\$HOME|')
 
-    printf "\033[Hplaylist: \"%s\"\033[K\n" "$disp_fp"
+    printf "\033[Hgithub.com/willyhorizont/MusiCSV-Player\033[K\n"
+    echo -e "---\033[K"
+    printf "playlist: \"%s\"\033[K\n" "$disp_fp"
     if [ "$show_pl" == "True" ]; then
         echo -e "---\033[K"
         for ((idx=0; idx<${#lns[@]}; idx++)); do
@@ -174,7 +176,7 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
     wait "$mpv_pid" 2>/dev/null; rm -f "$IPC_SOCK"
 
     case "$act_sig" in
-        "exit") printf "\nExit program safely. Bye!\n"; exit 0 ;;
+        "exit") exit 0 ;;
         "prev") [ $i -gt 0 ] && i=$((i - 1)) || { printf "\n[!] First track!\n"; sleep 0.5; }; continue ;;
         *) [[ "$is_rptone" == "True" ]] && continue || { [ $i -eq $(( ${#sgs[@]} - 1 )) ] && { [[ "$is_rptall" == "True" ]] && i=0 || break; } || i=$((i + 1)); }; continue ;;
     esac

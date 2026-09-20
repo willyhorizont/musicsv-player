@@ -1,3 +1,6 @@
+[Last updated: 20 Sep 2026 @ 08:23 AM][version: 0.1.2]
+update musicv-player.sh, remove and add message;
+
 [Last updated: 20 Sep 2026 @ 07:39 AM][version: 0.1.1]
 fix musicv-player.sh, fix IPC_SOCK TMPDIR;
 
