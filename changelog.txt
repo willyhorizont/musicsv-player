@@ -1,3 +1,6 @@
+[Last updated: 20 Sep 2026 @ 11:41 PM][version: 0.1.13]
+add screenshot;
+
 [Last updated: 20 Sep 2026 @ 11:16 PM][version: 0.1.12]
 update musicv-player.sh, add version;
 

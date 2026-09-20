@@ -1,5 +1,7 @@
 # MusiCSV Player
 
+![MusiCSV-Player Screenshot](https://github.com/willyhorizont/musiCSV-Player/blob/main/screenshot.jpg)  
+
 No more storing songs in mp3s, no more storing songs playlists in cloud services, just store it as plain old CSV-like text files and stream your music.  
 
 ## Installation/Updates (Desktop x86) * [Docker](https://docker.com) required

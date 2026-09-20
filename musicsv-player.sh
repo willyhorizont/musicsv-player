@@ -74,7 +74,7 @@ prt_ui() {
         disp_fp="\$HOME/${fp#$HOME/}"
     fi
 
-    printf "\033[Hgithub.com/willyhorizont/MusiCSV-Player/tree/0.1.12\033[K\n"
+    printf "\033[Hgithub.com/willyhorizont/MusiCSV-Player/tree/0.1.13\033[K\n"
     if [ "$show_pl" == "True" ]; then
         prt_sep "="
         echo -e "Currently Playing\033[K"
