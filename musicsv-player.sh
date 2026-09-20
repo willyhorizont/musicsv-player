@@ -143,6 +143,7 @@ i=0
 while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
     cur_idx=${ord[$i]} act_sig="none" cur_tit="Loading title..." cur_upl="Loading uploader info..." cur_sz="0MB" cur_prog="00:00:00 / 00:00:00"
     show_pl="False"
+    hs_refrsh_d="False"
     clear
     prt_ui $i; rm -f "$IPC_SOCK"
 
@@ -207,10 +208,11 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
 
         if [ "$show_pl" == "False" ]; then
             prt_ui $i
-        elif [ "$show_pl" == "True" ] && \
-            [ "$cur_tit" != "Loading title..." ] && \
-            [ "$cur_upl" != "Loading uploader info..." ]; then
-            prt_ui $i
+        elif [ "$show_pl" == "True" ] && [ "$hs_refrsh_d" == "False" ]; then
+            if [ "$cur_tit" != "Loading title..." ] && [ "$cur_upl" != "Loading uploader info..." ]; then
+                prt_ui $i
+                hs_refrsh_d="True"
+            fi
         fi
     done
 

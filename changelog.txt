@@ -1,3 +1,6 @@
+[Last updated: 20 Sep 2026 @ 08:37 PM][version: 0.1.8]
+update musicv-player.sh, small fix in show_pl part 2;
+
 [Last updated: 20 Sep 2026 @ 08:22 PM][version: 0.1.7]
 update musicv-player.sh, small fix in show_pl;
 
