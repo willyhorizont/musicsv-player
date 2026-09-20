@@ -78,7 +78,7 @@ prt_ui() {
         prt_sep "="
         echo -e "Currently Playing\033[K"
         printf "Playlist: \"%s\"\033[K\n" "$disp_fp"
-        printf "Title: %s\033[K\nUploader: %s\033[K\nSize: %s\033[K\n" "$cur_tit" "$cur_upl" "$cur_sz"
+        printf "Title: %s\033[K\nUploader: %s\033[K\n" "$cur_tit" "$cur_upl"
         prt_sep "="
         for ((idx=0; idx<${#lns[@]}; idx++)); do
             if [ ${ord[$idx]} -eq ${ord[$1]} ]; then
@@ -94,8 +94,9 @@ prt_ui() {
         prt_sep "="
         echo -e "Currently Playing\033[K"
         printf "Playlist: \"%s\"\033[K\n" "$disp_fp"
-        printf "Title: %s\033[K\nUploader: %s\033[K\nSize: %s\033[K\n" "$cur_tit" "$cur_upl" "$cur_sz"
+        printf "Title: %s\033[K\nUploader: %s\033[K\n" "$cur_tit" "$cur_upl"
         prt_sep "-"
+        printf "Size: %s\033[K\n" "$cur_sz"
         printf "%s\033[K\n" "$cur_prog"
     fi
     
@@ -133,6 +134,8 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
 
     mpv --no-video --ytdl-format=ba --msg-level=all=no --ytdl-raw-options-append=compat-options=no-live-chat --demuxer-lavf-o=reconnect=1,reconnect_at_eof=1,reconnect_streamed=1,reconnect_delay_max=5 --input-ipc-server="$IPC_SOCK" "${sgs[$cur_idx]}" >/dev/null 2>&1 &
     mpv_pid=$!
+
+    hs_refrsh_d="False"
 
     while kill -0 "$mpv_pid" 2>/dev/null; do
         read -s -n1 -t 1 k_inp; r_stat=$?
@@ -192,6 +195,12 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
 
         if [ "$show_pl" == "False" ]; then
             prt_ui $i
+        elif [ "$hs_refrsh_d" == "False" ]; then
+            if [ "$cur_tit" != "Loading track title..." ] && \
+               [ "$cur_upl" != "Loading artist info..." ]; then
+                prt_ui $i
+                hs_refrsh_d="True"
+            fi
         fi
     done
 

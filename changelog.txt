@@ -1,3 +1,6 @@
+[Last updated: 20 Sep 2026 @ 07:35 PM][version: 0.1.5]
+update musicv-player.sh, fix UI on show_pl;
+
 [Last updated: 20 Sep 2026 @ 06:59 PM][version: 0.1.4]
 update musicv-player.sh, disable UI refresh on show_pl, update prt_sep -3;
 
