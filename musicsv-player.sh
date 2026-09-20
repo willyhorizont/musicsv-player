@@ -61,7 +61,7 @@ cur_sz="0MB"
 cur_prog="00:00:00 / 00:00:00"
 
 prt_sep() {
-    printf '%*s' "$(tput cols 2>/dev/null || echo 56)" '' | tr ' ' "${1:-=}" ; printf "\033[K\n"
+    printf '%*s' "$(( $(tput cols 2>/dev/null || echo 56) - 3 ))" '' | tr ' ' "${1:-=}" ; printf "\033[K\n"
 }
 
 prt_ui() {
@@ -189,7 +189,10 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
         if [ -n "$tmpos" ] && [ -n "$dur" ]; then
             cur_prog="$(fmt_tm "$tmpos") / $(fmt_tm "$dur")"
         fi
-        prt_ui $i
+
+        if [ "$show_pl" == "False" ]; then
+            prt_ui $i
+        fi
     done
 
     wait "$mpv_pid" 2>/dev/null; rm -f "$IPC_SOCK"
