@@ -1,3 +1,6 @@
+[Last updated: 21 Sep 2026 @ 01:16 AM][version: 0.1.15]
+update pl UI;
+
 [Last updated: 21 Sep 2026 @ 12:14 AM][version: 0.1.14]
 small fix UI for termux;
 

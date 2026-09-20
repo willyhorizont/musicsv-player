@@ -60,6 +60,7 @@ cur_tit="Loading title..."
 cur_upl="Loading uploader info..."
 cur_sz="0MB"
 cur_prog="00:00:00 / 00:00:00"
+pl_scroll=0
 
 prt_sep() {
     printf '%*s' "$(( $(tput cols 2>/dev/null || echo 56) - 3 ))" '' | tr ' ' "${1:-=}" ; printf "\033[K\n"
@@ -74,55 +75,70 @@ prt_ui() {
         disp_fp="\$HOME/${fp#$HOME/}"
     fi
 
-    printf "\033[Hgithub.com/willyhorizont/MusiCSV-Player/tree/0.1.14\033[K\n"
+    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.15'
+    printf "\033[H\033[J$abt\033[K\n"
+    prt_sep "-"
+    printf "Currently Playing\033[K\n"
+    prt_sep "-"
+    printf "Query: %s\033[K\n" "${lns[$cur_idx]}"
+    # printf "Query: %s\033[K\n" "${sgs[$cur_idx]}"
+    prt_sep "-"
+    printf "Title: %s\033[K\n" "$cur_tit"
+    prt_sep "-"
+    printf "Uploader: %s\033[K\n" "$cur_upl"
+    prt_sep "-"
+    printf "Playlist: \"%s\"\033[K\n" "$disp_fp"
     if [ "$show_pl" == "True" ]; then
         prt_sep "="
-        printf "Currently Playing\033[K\n"
-        printf "Playlist: \"%s\"\033[K\n" "$disp_fp"
-        prt_sep "-"
-        printf "Query: %s\033[K\n" "${lns[$cur_idx]}"
-        # printf "Query: %s\033[K\n" "${sgs[$cur_idx]}"
-        prt_sep "-"
-        printf "Title: %s\033[K\n" "$cur_tit"
-        prt_sep "-"
-        printf "Uploader: %s\033[K\n" "$cur_upl"
-        prt_sep "="
-        for ((idx=0; idx<${#lns[@]}; idx++)); do
-            if [ ${ord[$idx]} -eq ${ord[$1]} ]; then
-                printf "> ; %s\033[K\n" "${lns[${ord[$idx]}]}"
-            else
-                printf "  ; %s\033[K\n" "${lns[${ord[$idx]}]}"
-            fi
-            if [ $idx -lt $(( ${#lns[@]} - 1 )) ]; then
-                prt_sep "-"
+        
+        local actv_stp=$1
+        local tot_lns=${#lns[@]}
+        
+        local ctr_fcs=$(( actv_stp + pl_scroll ))
+        local sta_win=$(( ctr_fcs - 1 ))
+        local end_win=$(( ctr_fcs + 1 ))
+        
+        if [ $sta_win -lt 0 ]; then
+            sta_win=0
+            end_win=2
+            [ $end_win -ge $tot_lns ] && end_win=$(( tot_lns - 1 ))
+        fi
+        
+        if [ $end_win -ge $tot_lns ]; then
+            end_win=$(( tot_lns - 1 ))
+            sta_win=$(( end_win - 2 ))
+            [ $sta_win -lt 0 ] && sta_win=0
+        fi
+        
+        for ((idx=sta_win; idx<=end_win; idx++)); do
+            if [ $idx -ge 0 ] && [ $idx -lt $tot_lns ]; then
+                if [ ${ord[$idx]} -eq ${ord[$actv_stp]} ]; then
+                    printf "> ; %d ; %s\033[K\n" "$((idx + 1))" "${lns[${ord[$idx]}]}"
+                else
+                    printf "  ; %d ; %s\033[K\n" "$((idx + 1))" "${lns[${ord[$idx]}]}"
+                fi
+                if [ $idx -lt $end_win ] && [ $idx -lt $(( tot_lns - 1 )) ]; then
+                    prt_sep "-"
+                fi
             fi
         done
-    else
         prt_sep "="
-        printf "Currently Playing\033[K\n"
-        printf "Playlist: \"%s\"\033[K\n" "$disp_fp"
-        prt_sep "-"
-        printf "Query: %s\033[K\n" "${lns[$cur_idx]}"
-        # printf "Query: %s\033[K\n" "${sgs[$cur_idx]}"
-        prt_sep "-"
-        printf "Title: %s\033[K\n" "$cur_tit"
-        prt_sep "-"
-        printf "Uploader: %s\033[K\n" "$cur_upl"
+    else
         prt_sep "-"
         printf "Size: %s\033[K\n" "$cur_sz"
         printf "%s\033[K\n" "$cur_prog"
+        prt_sep "-"
     fi
     
-    prt_sep "="
     printf "RptAll:%s RptOne:%s Shuf:%s\033[K\n" \
         "$([ "$is_rptall" == "True" ] && echo "Y" || echo "N")" \
         "$([ "$is_rptone" == "True" ] && echo "Y" || echo "N")" \
         "$([ "$is_shuf" == "True" ] && echo "Y" || echo "N")"
-    prt_sep "="
     printf "[Z]=[Prev] [P]=[Play/Pause] [Y]=[Next]\033[K\n"
     printf "[Q]=[Quit] [B]=[Rvrs] [F]=[Frwd]\033[K\n"
     printf "[R]=[RptAll] [1]=[RptOne] [X]=[Shuf] [L]=[ShwLs]\033[K\n"
-    prt_sep "="
+    printf "[W]=[ScrlLsUp] [S]=[ScrlLsDwn]\033[K\n"
+    prt_sep "-"
 }
 
 q_prop() {
@@ -144,6 +160,7 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
     cur_idx=${ord[$i]} act_sig="none" cur_tit="Loading title..." cur_upl="Loading uploader info..." cur_sz="0MB" cur_prog="00:00:00 / 00:00:00"
     show_pl="False"
     hs_refrsh_d="False"
+    pl_scroll=0
     clear
     prt_ui $i; rm -f "$IPC_SOCK"
 
@@ -161,27 +178,45 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
                 [pP]) send_mpv_cmd '["cycle", "pause"]' ;;
                 [bB]) send_mpv_cmd '["seek", -5, "relative"]' ;;
                 [fF]) send_mpv_cmd '["seek", 5, "relative"]' ;;
+                [wW])
+                    if [ "$show_pl" == "True" ]; then
+                        if [ $(( i + pl_scroll )) -gt 0 ]; then
+                            pl_scroll=$(( pl_scroll - 1 ))
+                            clear
+                            prt_ui $i
+                        fi
+                    fi
+                    ;;
+                [sS])
+                    if [ "$show_pl" == "True" ]; then
+                        if [ $(( i + pl_scroll )) -lt $(( ${#lns[@]} - 1 )) ]; then
+                            pl_scroll=$(( pl_scroll + 1 ))
+                            clear
+                            prt_ui $i
+                        fi
+                    fi
+                    ;;
                 [lL])
                     [ "$show_pl" == "True" ] && show_pl="False" || show_pl="True"
+                    pl_scroll=0
                     hs_refrsh_d="False"
                     clear
                     prt_ui $i
                     ;;
                 [rR])
                     if [ "$is_rptall" == "True" ]; then is_rptall="False"; else is_rptall="True"; is_rptone="False"; fi
-                    hs_refrsh_d="False"
                     clear
                     prt_ui $i
                     ;;
                 1)
                     if [ "$is_rptone" == "True" ]; then is_rptone="False"; else is_rptone="True"; is_rptall="False"; fi
-                    hs_refrsh_d="False"
                     clear
                     prt_ui $i
                     ;;
                 [xX])
                     show_pl="False"
                     hs_refrsh_d="False"
+                    pl_scroll=0
                     if [ "$is_shuf" == "True" ]; then
                         is_shuf="False"
                     else
