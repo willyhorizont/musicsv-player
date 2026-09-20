@@ -1,3 +1,6 @@
+[Last updated: 20 Sep 2026 @ 08:53 PM][version: 0.1.9]
+update README.md, update termux command;
+
 [Last updated: 20 Sep 2026 @ 08:37 PM][version: 0.1.8]
 update musicv-player.sh, small fix in show_pl part 2;
 
