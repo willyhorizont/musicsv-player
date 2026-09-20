@@ -74,10 +74,10 @@ prt_ui() {
         disp_fp="\$HOME/${fp#$HOME/}"
     fi
 
-    printf "\033[Hgithub.com/willyhorizont/MusiCSV-Player/tree/0.1.13\033[K\n"
+    printf "\033[Hgithub.com/willyhorizont/MusiCSV-Player/tree/0.1.14\033[K\n"
     if [ "$show_pl" == "True" ]; then
         prt_sep "="
-        echo -e "Currently Playing\033[K"
+        printf "Currently Playing\033[K\n"
         printf "Playlist: \"%s\"\033[K\n" "$disp_fp"
         prt_sep "-"
         printf "Query: %s\033[K\n" "${lns[$cur_idx]}"
@@ -99,7 +99,7 @@ prt_ui() {
         done
     else
         prt_sep "="
-        echo -e "Currently Playing\033[K"
+        printf "Currently Playing\033[K\n"
         printf "Playlist: \"%s\"\033[K\n" "$disp_fp"
         prt_sep "-"
         printf "Query: %s\033[K\n" "${lns[$cur_idx]}"
@@ -119,9 +119,9 @@ prt_ui() {
         "$([ "$is_rptone" == "True" ] && echo "Y" || echo "N")" \
         "$([ "$is_shuf" == "True" ] && echo "Y" || echo "N")"
     prt_sep "="
-    echo -e "[Z]=[Prev] [P]=[Play/Pause] [Y]=[Next]\033[K"
-    echo -e "[Q]=[Quit] [B]=[Rvrs] [F]=[Frwd]\033[K"
-    echo -e "[R]=[RptAll] [1]=[RptOne] [X]=[Shuf] [L]=[ShwLs]\033[K"
+    printf "[Z]=[Prev] [P]=[Play/Pause] [Y]=[Next]\033[K\n"
+    printf "[Q]=[Quit] [B]=[Rvrs] [F]=[Frwd]\033[K\n"
+    printf "[R]=[RptAll] [1]=[RptOne] [X]=[Shuf] [L]=[ShwLs]\033[K\n"
     prt_sep "="
 }
 
