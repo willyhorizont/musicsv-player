@@ -224,7 +224,7 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
     wait "$mpv_pid" 2>/dev/null; rm -f "$IPC_SOCK"
 
     case "$act_sig" in
-        "exit") exit 0 ;;
+        "exit") clear; exit 0 ;;
         "prev") [ $i -gt 0 ] && i=$((i - 1)) || { printf "\n[!] First track!\n"; sleep 0.5; }; continue ;;
         *) [[ "$is_rptone" == "True" ]] && continue || { [ $i -eq $(( ${#sgs[@]} - 1 )) ] && { [[ "$is_rptall" == "True" ]] && i=0 || break; } || i=$((i + 1)); }; continue ;;
     esac

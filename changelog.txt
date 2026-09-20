@@ -1,3 +1,6 @@
+[Last updated: 20 Sep 2026 @ 11:10 PM][version: 0.1.11]
+update musicv-player.sh, update quit;
+
 [Last updated: 20 Sep 2026 @ 10:58 PM][version: 0.1.10]
 update musicv-player.sh, update shuf;
 
