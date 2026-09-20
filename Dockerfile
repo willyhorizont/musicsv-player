@@ -8,6 +8,7 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
     ffmpeg \
     mpv \
     nodejs \
+    socat \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --upgrade yt-dlp --break-system-packages \

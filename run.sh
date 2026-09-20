@@ -25,6 +25,7 @@ fi
 
 docker run -it --rm \
     --device /dev/snd \
+    -e PIPEWIRE_DEBUG=0 \
     -v "$PWD:$PWD" \
     -v "$RD:$RD" \
     -v "$SCRIPT_DIR:$SCRIPT_DIR" \

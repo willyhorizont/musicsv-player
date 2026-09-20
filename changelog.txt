@@ -1,3 +1,10 @@
+[Last updated: 20 Sep 2026 @ 07:19 AM][version: 0.1.0]
+update Dockerfile;
+update example.csv;
+update README.md, update Installation/Updates (Desktop x86), update Installation/Updates (Termux);
+update run.sh;
+big update to musicv-player.sh;
+
 [Last updated: 19 Sep 2026 @ 11:00 PM][version: 0.0.10]
 update run.sh, remove docker image version;
 update README.md, fix Installation/Updates (Desktop x86);

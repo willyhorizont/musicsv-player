@@ -2,7 +2,7 @@
 
 SD=$(dirname "$(realpath "$0")")
 RD=$(realpath "$SD/..")
-V="0.0.10" # ! DON'T FORGET TO CHANGE VERSION BEFORE RUNNING !!!!
+V="0.1.0" # ! DON'T FORGET TO CHANGE VERSION BEFORE RUNNING !!!!
 T=$(date "+%d %b %Y @ %I:%M %p")
 cd "$RD" || exit
 
@@ -12,8 +12,11 @@ H="
 H=$(sed -e '/./,$!d' <<< "$H")
 # ! DON'T FORGET TO CHANGE COMMIT MESSAGE BEFORE RUNNING !!!!
 M="
-update run.sh, remove docker image version;
-update README.md, fix Installation/Updates (Desktop x86);
+update Dockerfile;
+update example.csv;
+update README.md, update Installation/Updates (Desktop x86), update Installation/Updates (Termux);
+update run.sh;
+big update to musicv-player.sh;
 "
 M=$(sed -e '/./,$!d' <<< "$M")
 M="$H

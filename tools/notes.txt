@@ -1,1 +1,13 @@
 https://mpv.io/manual/stable/
+
+## Development
+```bash
+docker rmi willyhorizont/musicv-player
+
+sed -i '/alias playmusicsv=/d' ~/.bashrc && echo "alias playmusicsv='\$HOME/musicsv-player/run.sh \$HOME/musicsv-player/musicsv-player.sh'" >> ~/.bashrc
+source ~/.bashrc
+
+rm -rf "$HOME/musicsv-player" && cp -r "$HOME/Codes/musicsv-player/" "$HOME/musicsv-player/"
+
+playmusicsv "$HOME/musicsv-player/example.csv" --loop --shuffle
+```
