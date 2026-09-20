@@ -1,3 +1,6 @@
+[Last updated: 21 Sep 2026 @ 05:32 AM][version: 0.1.19]
+small UI update;
+
 [Last updated: 21 Sep 2026 @ 05:30 AM][version: 0.1.18]
 update keybind;
 remove hide pl on shuf;
