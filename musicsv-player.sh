@@ -207,6 +207,10 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
 
         if [ "$show_pl" == "False" ]; then
             prt_ui $i
+        elif [ "$show_pl" == "True" ] && \
+            [ "$cur_tit" != "Loading title..." ] && \
+            [ "$cur_upl" != "Loading uploader info..." ]; then
+            prt_ui $i
         fi
     done
 
