@@ -60,36 +60,55 @@ cur_upl="Loading artist info..."
 cur_sz="0MB"
 cur_prog="00:00:00 / 00:00:00"
 
+prt_sep() {
+    printf '%*s' "$(tput cols 2>/dev/null || echo 56)" '' | tr ' ' "${1:-=}" ; printf "\033[K\n"
+}
+
 prt_ui() {
+    local hst_home="${HOST_HOME:-$HOME}"
     local disp_fp="None"
-    [ -n "$fp" ] && disp_fp=$(echo "$fp" | sed -E 's|/home/[^/]+|\$HOME|')
+    if [ -n "$fp" ] && [ -n "$HOST_HOME" ]; then
+        disp_fp="\$HOME/${fp#$hst_home/}"
+    elif [ -n "$fp" ]; then
+        disp_fp="\$HOME/${fp#$HOME/}"
+    fi
 
     printf "\033[Hgithub.com/willyhorizont/MusiCSV-Player\033[K\n"
-    echo -e "---\033[K"
-    printf "playlist: \"%s\"\033[K\n" "$disp_fp"
     if [ "$show_pl" == "True" ]; then
-        echo -e "---\033[K"
+        prt_sep "="
+        echo -e "Currently Playing\033[K"
+        printf "Playlist: \"%s\"\033[K\n" "$disp_fp"
+        printf "Title: %s\033[K\nUploader: %s\033[K\nSize: %s\033[K\n" "$cur_tit" "$cur_upl" "$cur_sz"
+        prt_sep "="
         for ((idx=0; idx<${#lns[@]}; idx++)); do
             if [ ${ord[$idx]} -eq ${ord[$1]} ]; then
                 printf "> ; %s\033[K\n" "${lns[${ord[$idx]}]}"
             else
                 printf "  ; %s\033[K\n" "${lns[${ord[$idx]}]}"
             fi
+            if [ $idx -lt $(( ${#lns[@]} - 1 )) ]; then
+                prt_sep "-"
+            fi
         done
+    else
+        prt_sep "="
+        echo -e "Currently Playing\033[K"
+        printf "Playlist: \"%s\"\033[K\n" "$disp_fp"
+        printf "Title: %s\033[K\nUploader: %s\033[K\nSize: %s\033[K\n" "$cur_tit" "$cur_upl" "$cur_sz"
+        prt_sep "-"
+        printf "%s\033[K\n" "$cur_prog"
     fi
-    echo -e "---\033[K"
+    
+    prt_sep "="
     printf "RptAll:%s RptOne:%s Shuf:%s\033[K\n" \
         "$([ "$is_rptall" == "True" ] && echo "Y" || echo "N")" \
         "$([ "$is_rptone" == "True" ] && echo "Y" || echo "N")" \
         "$([ "$is_shuf" == "True" ] && echo "Y" || echo "N")"
-    echo -e "---\033[K"
-    echo -e "[B]=[Rev] [Z]=[Prev] [P]=[Play/Pause] [Y]=[Next] [F]=[Frwd]\033[K"
-    echo -e "[Q]=[Quit]\033[K"
+    prt_sep "="
+    echo -e "[Z]=[Prev] [P]=[Play/Pause] [Y]=[Next]\033[K"
+    echo -e "[Q]=[Quit] [B]=[Rvrs] [F]=[Frwd]\033[K"
     echo -e "[R]=[RptAll] [1]=[RptOne] [X]=[Shuf] [L]=[ShwLs]\033[K"
-    echo -e "---\033[K"
-    echo -e "Currently Playing\033[K"
-    printf "Title: %s\033[K\nUploader: %s\033[K\nSize: %s\033[K\n%s\033[K\n" "$cur_tit" "$cur_upl" "$cur_sz" "$cur_prog"
-    echo -e "---\033[K"
+    prt_sep "="
 }
 
 q_prop() {

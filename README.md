@@ -22,6 +22,8 @@ rm -rf ~/.cache/pip
 pip install --upgrade --force-reinstall --break-system-packages yt-dlp
 yt-dlp --rm-cache-dir
 termux-setup-storage
+sed -i '/volume-keys =/d' ~/.termux/termux.properties && echo "volume-keys = volume" >> ~/.termux/termux.properties
+termux-reload-settings
 
 sed -i '/alias playmusicsv=/d' ~/.bashrc && echo "alias playmusicsv='\$HOME/musicsv-player/musicsv-player.sh'" >> ~/.bashrc
 source ~/.bashrc
