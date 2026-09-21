@@ -1,3 +1,11 @@
+[Last updated: 22 Sep 2026 @ 03:01 AM][version: 0.1.22]
+replace ScrlLsUp ScrlLsDwn with PtrUp PtrDwn;
+update keybinds;
+add PauScrn;
+add Sel;
+add sel_ptr;
+add Reqry;
+
 [Last updated: 21 Sep 2026 @ 07:44 AM][version: 0.1.21]
 small UI update;
 

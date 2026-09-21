@@ -9,7 +9,8 @@ is_rptall="False"
 is_rptone="False"
 is_shuf="False"
 shw_pl="False"
-declare -a sgs=() lns=()
+is_scrn_pau="False"
+declare -a sgs=() lns=() reqry_offsets=()
 
 for arg in "$@"; do
     [[ "$arg" == "--rptall" ]] && is_rptall="True" && continue
@@ -44,7 +45,10 @@ fi
 [ ${#sgs[@]} -eq 0 ] && { echo "Not found!"; exit 1; }
 
 declare -a ord=()
-for ((k=0; k<${#sgs[@]}; k++)); do ord+=($k); done
+for ((k=0; k<${#sgs[@]}; k++)); do 
+    ord+=($k)
+    reqry_offsets[$k]=1
+done
 
 shuf() {
     if [ "$is_shuf" == "True" ]; then
@@ -64,7 +68,8 @@ cur_tit="Loading title..."
 cur_upl="Loading uploader info..."
 cur_sz="0MB"
 cur_prog="00:00:00 / 00:00:00"
-pl_scroll=0
+pl_scrl=0
+sel_ptr=0
 
 prt_sep() {
     printf '%*s' "$(( $(tput cols 2>/dev/null || echo 56) - 3 ))" '' | tr ' ' "${1:-=}" ; printf "\033[K\n"
@@ -109,7 +114,7 @@ prt_ui() {
 
     local mx_w=$(( $(tput cols 2>/dev/null || echo 56) - 3 ))
 
-    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.21'
+    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.22'
     printf "\033[H\033[J$abt\033[K\n"
     prt_sep "-"
     printf "%s\033[K\n" "$(get_anm_chnk "Query: " "${lns[$cur_idx]}" $mx_w)"
@@ -125,15 +130,8 @@ prt_ui() {
         local actv_stp=$1
         local tot_lns=${#lns[@]}
         
-        local ctr_fcs=$(( actv_stp + pl_scroll ))
-        local sta_win=$(( ctr_fcs - 1 ))
-        local end_win=$(( ctr_fcs + 1 ))
-        
-        if [ $sta_win -lt 0 ]; then
-            sta_win=0
-            end_win=2
-            [ $end_win -ge $tot_lns ] && end_win=$(( tot_lns - 1 ))
-        fi
+        local sta_win=$pl_scrl
+        local end_win=$(( pl_scrl + 2 ))
         
         if [ $end_win -ge $tot_lns ]; then
             end_win=$(( tot_lns - 1 ))
@@ -143,12 +141,21 @@ prt_ui() {
         
         for ((idx=sta_win; idx<=end_win; idx++)); do
             if [ $idx -ge 0 ] && [ $idx -lt $tot_lns ]; then
-                local raw_itm="${lns[${ord[$idx]}]}"
+                local rl_idx_pos=${ord[$idx]}
+                local raw_itm="${lns[$rl_idx_pos]}"
                 
-                local prefix="  ; $((idx + 1)) ; "
-                [ ${ord[$idx]} -eq ${ord[$actv_stp]} ] && prefix="> ; $((idx + 1)) ; "
+                local p_now=" "
+                local p_sel=" "
+                [ $idx -eq $actv_stp ] && p_now=">"
+                [ $idx -eq $sel_ptr ] && p_sel="*"
                 
-                printf "%s\033[K\n" "$(get_anm_chnk "$prefix" "$raw_itm" $mx_w)"
+                local v_offset=""
+                if [ -n "${reqry_offsets[$rl_idx_pos]}" ] && [ "${reqry_offsets[$rl_idx_pos]}" -gt 1 ]; then
+                    v_offset=" [v${reqry_offsets[$rl_idx_pos]}]"
+                fi
+                
+                local prefx="${p_now}${p_sel}; $((idx + 1)) ; "
+                printf "%s\033[K\n" "$(get_anm_chnk "$prefx" "${raw_itm}${v_offset}" $mx_w)"
                 
                 if [ $idx -lt $end_win ] && [ $idx -lt $(( tot_lns - 1 )) ]; then
                     prt_sep "-"
@@ -162,14 +169,18 @@ prt_ui() {
         prt_sep "-"
     fi
     
-    printf "RptOne:%s | RptAll:%s | Shuf:%s\033[K\n" \
+    printf "RptOne:%s | RptAll:%s | Shuf:%s | ScrnPau: %s\033[K\n" \
         "$([ "$is_rptone" == "True" ] && echo "Ya" || echo "No")" \
         "$([ "$is_rptall" == "True" ] && echo "Ya" || echo "No")" \
-        "$([ "$is_shuf" == "True" ] && echo "Ya" || echo "No")"
-    printf "[P]=[Quit] [N]=[Rwnd] [M]=[Frwd]\033[K\n"
-    printf "[Z]=[Prev] [X]=[Play/Pause] [C]=[Next]\033[K\n"
-    printf "[1]=[RptOne] [2]=[RptAll] [3]=[Shuf]\033[K\n"
-    printf "[U]=[ShwLs] [T]=[ScrlLsUp] [G]=[ScrlLsDwn]\033[K\n"
+        "$([ "$is_shuf" == "True" ] && echo "Ya" || echo "No")" \
+        "$([ "$is_scrn_pau" == "True" ] && echo "Ya" || echo "No")"
+    # local curq_offst=${reqry_offsets[$cur_idx]}
+    # [[ ! "$curq_offst" =~ ^[0-9]+$ ]] && curq_offst=1
+    # printf "QryOrd: %s\033[K\n" "$curq_offst"
+    printf "[0]=[Ext] [1]=[RptOne] [2]=[RptAll] [3]=[Shuf]\033[K\n"
+    printf "[L]=[Reqry] [O]=[Prv] [P]=[Nxt] [T]=[PtrUp]\033[K\n"
+    printf "[M]=[ShwLs] [U]=[Sel] [F]=[PtrDwn]\033[K\n"
+    printf "[A]=[Rewnd] [S]=[Frwd] [Z]=[Rsm/Pau] [B]=[PauScrn]\033[K\n"
     prt_sep "-"
 }
 
@@ -202,8 +213,11 @@ fmt_tm() {
 clear
 
 i=0
+sel_ptr=0
+
 while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
     cur_idx=${ord[$i]} act_sig="none" cur_tit="Loading title..." cur_upl="Loading uploader info..." cur_sz="0MB" cur_prog="00:00:00 / 00:00:00"
+    is_scrn_pau="False"
     clear
     prt_ui $i; rm -f "$IPC_SOCK"
 
@@ -216,68 +230,97 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
         
         if [ $r_stat -eq 0 ]; then
             case "$k_inp" in
-                [pP]) act_sig="exit"; kill "$mpv_pid" 2>/dev/null; break ;;
-                [nN]) send_mpv_cmd '["seek", -5, "relative"]' ;;
-                [mM]) send_mpv_cmd '["seek", 5, "relative"]' ;;
-                [zZ]) act_sig="prev"; kill "$mpv_pid" 2>/dev/null; break ;;
-                [xX]) send_mpv_cmd '["cycle", "pause"]' ;;
-                [cC]) act_sig="next"; kill "$mpv_pid" 2>/dev/null; break ;;
+                0) act_sig="exit"; kill "$mpv_pid" 2>/dev/null; break ;;
                 1)
                     if [ "$is_rptone" == "True" ]; then is_rptone="False"; else is_rptone="True"; is_rptall="False"; fi
-                    clear
-                    prt_ui $i
+                    clear; prt_ui $i;
                     ;;
                 2)
                     if [ "$is_rptall" == "True" ]; then is_rptall="False"; else is_rptall="True"; is_rptone="False"; fi
-                    clear
-                    prt_ui $i
+                    clear; prt_ui $i;
                     ;;
                 3)
-                    pl_scroll=0
                     if [ "$is_shuf" == "True" ]; then
                         is_shuf="False"
                     else
                         is_shuf="True"
                         shuf $i
                     fi
-                    clear
-                    prt_ui $i
+                    clear; prt_ui $i;
                     ;;
-                [uU])
-                    [ "$shw_pl" == "True" ] && shw_pl="False" || shw_pl="True"
-                    pl_scroll=0
-                    clear
-                    prt_ui $i
-                    ;;
+                [oO]) act_sig="prev"; kill "$mpv_pid" 2>/dev/null; break ;;
+                [pP]) act_sig="next"; kill "$mpv_pid" 2>/dev/null; break ;;
                 [tT])
                     if [ "$shw_pl" == "True" ]; then
-                        if [ $(( i + pl_scroll )) -gt 0 ]; then
-                            pl_scroll=$(( pl_scroll - 1 ))
-                            clear
-                            prt_ui $i
+                        if [ $sel_ptr -gt 0 ]; then
+                            sel_ptr=$(( sel_ptr - 1 ))
+                            if [ $sel_ptr -lt $pl_scrl ]; then
+                                pl_scrl=$sel_ptr
+                            fi
+                            clear; prt_ui $i;
                         fi
                     fi
                     ;;
-                [gG])
+                [fF])
                     if [ "$shw_pl" == "True" ]; then
-                        if [ $(( i + pl_scroll )) -lt $(( ${#lns[@]} - 1 )) ]; then
-                            pl_scroll=$(( pl_scroll + 1 ))
-                            clear
-                            prt_ui $i
+                        if [ $sel_ptr -lt $(( ${#lns[@]} - 1 )) ]; then
+                            sel_ptr=$(( sel_ptr + 1 ))
+                            if [ $sel_ptr -gt $(( pl_scrl + 2 )) ]; then
+                                pl_scrl=$(( sel_ptr - 2 ))
+                            fi
+                            clear; prt_ui $i;
                         fi
+                    fi
+                    ;;
+                [mM])
+                    [ "$shw_pl" == "True" ] && shw_pl="False" || shw_pl="True"
+                    clear; prt_ui $i;
+                    ;;
+                [uU])
+                    if [ "$shw_pl" == "True" ]; then
+                        act_sig="seltrig"
+                        kill "$mpv_pid" 2>/dev/null
+                        break
+                    fi
+                    ;;
+                [lL])
+                    if [ "$shw_pl" == "True" ]; then
+                        curq_offst=${reqry_offsets[$cur_idx]}
+                        [[ ! "$curq_offst" =~ ^[0-9]+$ ]] && curq_offst=1
+                        reqry_offsets[$cur_idx]=$(( curq_offst + 1 ))
+                        cln_q=""
+                        if [ -n "$fp" ]; then
+                            cln_q=$(echo "${lns[$cur_idx]}" | sed 's/^[[:space:]]*;[[:space:]]*//; s/[[:space:]]*;[[:space:]]*$//' | xargs)
+                        else
+                            cln_q=$(echo "${lns[$cur_idx]}" | sed 's/[[:space:]]*;[[:space:]]*/ ; /g; s/[[:space:]]\+/ /g' | xargs)
+                        fi
+                        cln_q=$(echo "$cln_q" | sed 's/[[:space:]]*;[[:space:]]*$//' | xargs)
+                        nu_offst=${reqry_offsets[$cur_idx]}
+                        sgs[$cur_idx]="ytdl://ytsearch${nu_offst}:$cln_q"
+                        act_sig="reqry"
+                        kill "$mpv_pid" 2>/dev/null
+                        break
+                    fi
+                    ;;
+                [aA]) send_mpv_cmd '["seek", -5, "relative"]' ;;
+                [sS]) send_mpv_cmd '["seek", 5, "relative"]' ;;
+                [zZ]) send_mpv_cmd '["cycle", "pause"]' ;;
+                [bB])
+                    if [ "$is_scrn_pau" == "True" ]; then
+                        is_scrn_pau="False"
+                    else
+                        is_scrn_pau="True"
+                        prt_ui $i
                     fi
                     ;;
             esac
         fi
-        
         t_val=$(q_prop "media-title")
         [[ -n "$t_val" && ! "$t_val" =~ ^ytsearch: && ! "$t_val" =~ ^ytdl:// ]] && cur_tit="$t_val"
-        
         u_val=$(q_prop "file-tags/uploader")
         [ -z "$u_val" ] && u_val=$(q_prop "metadata/by-key/Uploader")
         [ -z "$u_val" ] && u_val=$(q_prop "uploader")
         [ -n "$u_val" ] && cur_upl="$u_val"
-        
         cac_j=$(socat - "UNIX-CONNECT:$IPC_SOCK" 2>/dev/null <<< '{"command":["get_property","demuxer-cache-state"]}')
         if [ -n "$cac_j" ]; then
             c_bytes=$(python3 -c "import sys, json; print(json.loads(sys.stdin.read()).get('data', {}).get('total-bytes',0))" <<< "$cac_j" 2>/dev/null)
@@ -287,15 +330,39 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
         if [ -n "$tmpos" ] && [ -n "$dur" ]; then
             cur_prog="$(fmt_tm "$tmpos") / $(fmt_tm "$dur")"
         fi
-        ANM_TICK=$(( ANM_TICK + 1 ))
-        prt_ui $i
+        if [ "$is_scrn_pau" == "False" ]; then
+            ANM_TICK=$(( ANM_TICK + 1 ))
+            prt_ui $i
+        fi
     done
     wait "$mpv_pid" 2>/dev/null; rm -f "$IPC_SOCK"
     case "$act_sig" in
         "exit") clear; exit 0 ;;
-        "prev") [ $i -gt 0 ] && i=$((i - 1)) || { printf "\n[!] First track!\n"; sleep 0.5; }; continue ;;
-        *) [[ "$is_rptone" == "True" ]] && continue || { [ $i -eq $(( ${#sgs[@]} - 1 )) ] && { [[ "$is_rptall" == "True" ]] && i=0 || break; } || i=$((i + 1)); }; continue ;;
-    esac
+        "reqry") continue ;;
+        "seltrig")
+            i=$sel_ptr
+            continue
+            ;;
+        "prev")
+            [ $i -gt 0 ] && i=$((i - 1)) || { printf "\n[!] First track!\n"; sleep 0.5; }
+            sel_ptr=$i
+            continue
+            ;;
+        *)
+            if [[ "$is_rptone" == "True" ]]; then
+                continue
+            else
+                [ $i -eq $(( ${#sgs[@]} - 1 )) ] && { [[ "$is_rptall" == "True" ]] && i=0 || break; } || i=$((i + 1))
+                sel_ptr=$i
+                if [ $i -lt $pl_scrl ] || [ $i -gt $(( pl_scrl + 2 )) ]; then
+                    pl_scrl=$i
+                    [ $pl_scrl -gt $(( ${#lns[@]} - 3 )) ] && pl_scrl=$(( ${#lns[@]} - 3 ))
+                    [ $pl_scrl -lt 0 ] && pl_scrl=0
+                fi
+                continue
+            fi
+            ;;
+        esac
 done
 
 printf "\nPlaying queue is done!\n"

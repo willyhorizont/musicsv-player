@@ -1,0 +1,46 @@
+123
+ASZ
+RT
+CV
+NM
+UI
+P
+
+123
+ASZ
+RT
+CV
+HJK
+P
+
+123
+ASZ
+RT
+CV
+UH
+M
+OP
+
+123
+ASZ
+RT
+CV
+UH
+KM
+P
+
+---------------------------------------------------
+[0]=[Ext] [1]=[RptOne] [2]=[RptAll] [3]=[Shuf]
+[L]=[Reqry] [O]=[Prv] [P]=[Nxt] [T]=[ScrlLsUp]
+[M]=[ShwLs] [U]=[SelLsItm] [F]=[ScrlLsDwn]
+[A]=[Rewnd] [S]=[Frwd] [Z]=[Rsm/Pau] [B]=[PauScrn]
+---------------------------------------------------
+
+https://en.key-test.ru/
+document.addEventListener("keydown", (e) => e.stopImmediatePropagation(), true);
+document.addEventListener("keyup", (e) => e.stopImmediatePropagation(), true);
+document.querySelectorAll(".key").forEach(keyElement => {
+    keyElement.addEventListener("click", function() {
+        this.classList.toggle("active");
+    });
+});

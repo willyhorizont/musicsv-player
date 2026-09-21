@@ -2,7 +2,7 @@
 
 SD=$(dirname "$(realpath "$0")")
 RD=$(realpath "$SD/..")
-V="0.1.21" # ! DON'T FORGET TO CHANGE VERSION BEFORE RUNNING !!!!
+V="0.1.22" # ! DON'T FORGET TO CHANGE VERSION BEFORE RUNNING !!!!
 T=$(date "+%d %b %Y @ %I:%M %p")
 cd "$RD" || exit
 
@@ -12,7 +12,12 @@ H="
 H=$(sed -e '/./,$!d' <<< "$H")
 # ! DON'T FORGET TO CHANGE COMMIT MESSAGE BEFORE RUNNING !!!!
 M="
-small UI update;
+replace ScrlLsUp ScrlLsDwn with PtrUp PtrDwn;
+update keybinds;
+add PauScrn;
+add Sel;
+add sel_ptr;
+add Reqry;
 "
 M=$(sed -e '/./,$!d' <<< "$M")
 M="$H
