@@ -109,7 +109,7 @@ prt_ui() {
 
     local mx_w=$(( $(tput cols 2>/dev/null || echo 56) - 3 ))
 
-    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.20'
+    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.21'
     printf "\033[H\033[J$abt\033[K\n"
     prt_sep "-"
     printf "%s\033[K\n" "$(get_anm_chnk "Query: " "${lns[$cur_idx]}" $mx_w)"
@@ -120,7 +120,7 @@ prt_ui() {
     prt_sep "-"
     printf "%s\033[K\n" "$(get_anm_chnk "Playlist: " "\"$disp_fp\"" $mx_w)"
     if [ "$shw_pl" == "True" ]; then
-        prt_sep "="
+        prt_sep "v"
         
         local actv_stp=$1
         local tot_lns=${#lns[@]}
@@ -155,9 +155,9 @@ prt_ui() {
                 fi
             fi
         done
-        prt_sep "="
+        prt_sep "^"
     else
-        prt_sep "-"
+        prt_sep "x"
         printf "Size: %s\033[K | %s\033[K\n" "$cur_sz" "$cur_prog"
         prt_sep "-"
     fi

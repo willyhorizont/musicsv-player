@@ -1,3 +1,6 @@
+[Last updated: 21 Sep 2026 @ 07:44 AM][version: 0.1.21]
+small UI update;
+
 [Last updated: 21 Sep 2026 @ 05:33 AM][version: 0.1.20]
 small UI fix;
 
