@@ -1,3 +1,6 @@
+[Last updated: 22 Sep 2026 @ 07:48 AM][version: 0.1.23]
+try comparing socat vs netcat vs net nodejs to see which one smoother;
+
 [Last updated: 22 Sep 2026 @ 03:01 AM][version: 0.1.22]
 replace ScrlLsUp ScrlLsDwn with PtrUp PtrDwn;
 update keybinds;

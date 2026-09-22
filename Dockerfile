@@ -9,6 +9,7 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
     mpv \
     nodejs \
     socat \
+    netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --upgrade yt-dlp --break-system-packages \

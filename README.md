@@ -22,7 +22,7 @@ playmusicsv "$HOME/Music/musicsv-playlist/example.csv" --rptall --shuf
 ## Installation/Updates (Termux)
 ```bash
 pkg update -y && pkg upgrade -y
-pkg install -y --reinstall git python python-pip libexpat ffmpeg mpv nodejs socat
+pkg install -y --reinstall git python python-pip libexpat ffmpeg mpv nodejs socat netcat-openbsd
 rm -rf ~/.cache/pip
 pip install --upgrade --force-reinstall --break-system-packages yt-dlp
 yt-dlp --rm-cache-dir

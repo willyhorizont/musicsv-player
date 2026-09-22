@@ -1,12 +1,5 @@
 #!/bin/bash
 
-# printf "\033[?25l"
-# clean_exit() {
-#     printf "\033[?25h\033[2J\033[H"
-#     exit 0
-# }
-# trap clean_exit SIGINT SIGTERM
-
 IPC_SOCK="${TMPDIR:-/tmp}/mpv-socket"
 fp=""
 peln=""
@@ -78,12 +71,8 @@ cur_prog="00:00:00 / 00:00:00"
 pl_scrl=0
 sel_ptr=0
 
-MX_W=$(( COLUMNS - 3 ))
-[ -z "$MX_W" ] || [ "$MX_W" -le 0 ] && MX_W=$(( $(tput cols 2>/dev/null || echo 56) - 3 ))
-trap 'MX_W=$(( $(tput cols 2>/dev/null || echo 56) - 3 ))' SIGWINCH
-
 prt_sep() {
-    printf '%*s' "$MX_W" '' | tr ' ' "${1:-=}" ; printf "\033[K\n"
+    printf '%*s' "$(( $(tput cols 2>/dev/null || echo 56) - 3 ))" '' | tr ' ' "${1:-=}" ; printf "\033[K\n"
 }
 
 get_anm_chnk() {
@@ -115,8 +104,6 @@ get_anm_chnk() {
 }
 
 prt_ui() {
-    printf "\033[1;1H"
-
     local hst_home="${HOST_HOME:-$HOME}"
     local disp_fp="None"
     if [ -n "$fp" ] && [ -n "$HOST_HOME" ]; then
@@ -125,10 +112,10 @@ prt_ui() {
         disp_fp="\$HOME/${fp#$HOME/}"
     fi
 
-    local mx_w=$MX_W
+    local mx_w=$(( $(tput cols 2>/dev/null || echo 56) - 3 ))
 
-    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.23'
-    printf "%s\033[K\n" "$abt"
+    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.22'
+    printf "\033[H\033[J$abt\033[K\n"
     prt_sep "-"
     printf "%s\033[K\n" "$(get_anm_chnk "Query: " "${lns[$cur_idx]}" $mx_w)"
     prt_sep "-"
@@ -187,13 +174,14 @@ prt_ui() {
         "$([ "$is_rptall" == "True" ] && echo "Ya" || echo "No")" \
         "$([ "$is_shuf" == "True" ] && echo "Ya" || echo "No")" \
         "$([ "$is_scrn_pau" == "True" ] && echo "Ya" || echo "No")"
+    # local curq_offst=${reqry_offsets[$cur_idx]}
+    # [[ ! "$curq_offst" =~ ^[0-9]+$ ]] && curq_offst=1
+    # printf "QryOrd: %s\033[K\n" "$curq_offst"
     printf "[0]=[Ext] [1]=[RptOne] [2]=[RptAll] [3]=[Shuf]\033[K\n"
     printf "[L]=[Reqry] [O]=[Prv] [P]=[Nxt] [T]=[PtrUp]\033[K\n"
     printf "[M]=[ShwLs] [U]=[Sel] [F]=[PtrDwn]\033[K\n"
     printf "[A]=[Rewnd] [S]=[Frwd] [Z]=[Rsm/Pau] [B]=[PauScrn]\033[K\n"
     prt_sep "-"
-    
-    printf "\033[J"
 }
 
 q_prop() {
@@ -219,38 +207,37 @@ send_mpv_cmd() {
 }
 
 fmt_tm() {
-    local sec="${1%.*}"
-    printf '%(%T)T' "$sec" 2>/dev/null || echo "00:00:00"
+    date -u -d "@${1%.*}" +%T 2>/dev/null || echo "00:00:00"
 }
 
-printf "\033[2J"
+clear
+
 i=0
 sel_ptr=0
 
 while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
     cur_idx=${ord[$i]} act_sig="none" cur_tit="Loading title..." cur_upl="Loading uploader info..." cur_sz="0MB" cur_prog="00:00:00 / 00:00:00"
     is_scrn_pau="False"
-    
-    rm -f "$IPC_SOCK"
-    prt_ui $i
+    clear
+    prt_ui $i; rm -f "$IPC_SOCK"
 
     mpv --no-video --ytdl-format=ba --msg-level=all=no --ytdl-raw-options-append=compat-options=no-live-chat --demuxer-lavf-o=reconnect=1,reconnect_at_eof=1,reconnect_streamed=1,reconnect_delay_max=5 --input-ipc-server="$IPC_SOCK" "${sgs[$cur_idx]}" >/dev/null 2>&1 &
     mpv_pid=$!
     ANM_TICK=0
 
     while kill -0 "$mpv_pid" 2>/dev/null; do
-        read -s -n1 -t 0.1 k_inp; r_stat=$?
+        read -s -n1 -t 1 k_inp; r_stat=$?
         
         if [ $r_stat -eq 0 ]; then
             case "$k_inp" in
                 0) act_sig="exit"; kill "$mpv_pid" 2>/dev/null; break ;;
                 1)
                     if [ "$is_rptone" == "True" ]; then is_rptone="False"; else is_rptone="True"; is_rptall="False"; fi
-                    prt_ui $i;
+                    clear; prt_ui $i;
                     ;;
                 2)
                     if [ "$is_rptall" == "True" ]; then is_rptall="False"; else is_rptall="True"; is_rptone="False"; fi
-                    prt_ui $i;
+                    clear; prt_ui $i;
                     ;;
                 3)
                     if [ "$is_shuf" == "True" ]; then
@@ -259,7 +246,7 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
                         is_shuf="True"
                         shuf $i
                     fi
-                    prt_ui $i;
+                    clear; prt_ui $i;
                     ;;
                 [oO]) act_sig="prev"; kill "$mpv_pid" 2>/dev/null; break ;;
                 [pP]) act_sig="next"; kill "$mpv_pid" 2>/dev/null; break ;;
@@ -270,7 +257,7 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
                             if [ $sel_ptr -lt $pl_scrl ]; then
                                 pl_scrl=$sel_ptr
                             fi
-                            prt_ui $i;
+                            clear; prt_ui $i;
                         fi
                     fi
                     ;;
@@ -281,13 +268,13 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
                             if [ $sel_ptr -gt $(( pl_scrl + 2 )) ]; then
                                 pl_scrl=$(( sel_ptr - 2 ))
                             fi
-                            prt_ui $i;
+                            clear; prt_ui $i;
                         fi
                     fi
                     ;;
                 [mM])
                     [ "$shw_pl" == "True" ] && shw_pl="False" || shw_pl="True"
-                    prt_ui $i;
+                    clear; prt_ui $i;
                     ;;
                 [uU])
                     if [ "$shw_pl" == "True" ]; then
@@ -334,16 +321,14 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
         [ -z "$u_val" ] && u_val=$(q_prop "metadata/by-key/Uploader")
         [ -z "$u_val" ] && u_val=$(q_prop "uploader")
         [ -n "$u_val" ] && cur_upl="$u_val"
-        if [ "$shw_pl" == "False" ] && [ -S "$IPC_SOCK" ]; then
-            cac_j=$(socat - "UNIX-CONNECT:$IPC_SOCK" 2>/dev/null <<< '{"command":["get_property","demuxer-cache-state"]}')
-            if [ -n "$cac_j" ]; then
-                c_bytes=$(python3 -c "import sys, json; print(json.loads(sys.stdin.read()).get('data', {}).get('total-bytes',0))" <<< "$cac_j" 2>/dev/null)
-                [[ "$c_bytes" =~ ^[0-9]+$ ]] && [ "$c_bytes" -gt 0 ] && cur_sz="$((c_bytes / 1024 / 1024))MB" || cur_sz="0MB"
-            fi
-            tmpos=$(q_prop "time-pos") dur=$(q_prop "duration")
-            if [[ "$tmpos" =~ ^[0-9.]+$ ]] && [[ "$dur" =~ ^[0-9.]+$ ]]; then
-                cur_prog="$(fmt_tm "$tmpos") / $(fmt_tm "$dur")"
-            fi
+        cac_j=$(socat - "UNIX-CONNECT:$IPC_SOCK" 2>/dev/null <<< '{"command":["get_property","demuxer-cache-state"]}')
+        if [ -n "$cac_j" ]; then
+            c_bytes=$(python3 -c "import sys, json; print(json.loads(sys.stdin.read()).get('data', {}).get('total-bytes',0))" <<< "$cac_j" 2>/dev/null)
+            [[ "$c_bytes" =~ ^[0-9]+$ ]] && [ "$c_bytes" -gt 0 ] && cur_sz="$((c_bytes / 1024 / 1024))MB" || cur_sz="0MB"
+        fi
+        tmpos=$(q_prop "time-pos") dur=$(q_prop "duration")
+        if [ -n "$tmpos" ] && [ -n "$dur" ]; then
+            cur_prog="$(fmt_tm "$tmpos") / $(fmt_tm "$dur")"
         fi
         if [ "$is_scrn_pau" == "False" ]; then
             ANM_TICK=$(( ANM_TICK + 1 ))
@@ -352,8 +337,7 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
     done
     wait "$mpv_pid" 2>/dev/null; rm -f "$IPC_SOCK"
     case "$act_sig" in
-        "exit") printf "\033[2J\033[H"; exit 0 ;;
-        # "exit") clean_exit ;;
+        "exit") clear; exit 0 ;;
         "reqry") continue ;;
         "seltrig")
             i=$sel_ptr
