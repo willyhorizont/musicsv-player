@@ -29,10 +29,12 @@ HOST_LINES=$(tput lines 2>/dev/null || echo 24)
 docker run -it --rm \
     --device /dev/snd \
     -e PIPEWIRE_DEBUG=0 \
+    -e PYTHONDONTWRITEBYTECODE=1 \
     -e HOST_HOME="$HOME" \
     -e TERM="$TERM" \
     -e COLUMNS="$HOST_COLS" \
     -e LINES="$HOST_LINES" \
+    -v "$HOME:$HOME" \
     -v "$PWD:$PWD" \
     -v "$RD:$RD" \
     -v "$SCRIPT_DIR:$SCRIPT_DIR" \

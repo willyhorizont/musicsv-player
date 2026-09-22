@@ -1,5 +1,15 @@
 #!/bin/bash
 
+SD=$(dirname "$(realpath "$0")")
+RD=$(realpath "$SD")
+
+printf "\033[?25l"
+clean_exit() {
+    printf "\033[?25h\033[2J\033[H"
+    exit 0
+}
+trap clean_exit SIGINT SIGTERM
+
 IPC_SOCK="${TMPDIR:-/tmp}/mpv-socket"
 fp=""
 peln=""
@@ -11,6 +21,13 @@ is_shuf="False"
 shw_pl="False"
 is_scrn_pau="False"
 declare -a sgs=() lns=() reqry_offsets=()
+if command -v socat >/dev/null 2>&1; then
+    SOC_CH="socat"
+elif command -v nc >/dev/null 2>&1; then
+    SOC_CH="netcat"
+else
+    SOC_CH="builtin"
+fi
 
 for arg in "$@"; do
     [[ "$arg" == "--rptall" ]] && is_rptall="True" && continue
@@ -120,7 +137,7 @@ prt_ui() {
 
     local mx_w=$MX_W
 
-    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.27'
+    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.28'
     printf "%s\033[K\n" "$abt"
     prt_sep "-"
     printf "%s\033[K\n" "$(get_anm_chnk "Query: " "${lns[$cur_idx]}" $mx_w)"
@@ -191,39 +208,39 @@ prt_ui() {
 
 q_prop() {
     if [ -S "$IPC_SOCK" ]; then
-        node -e '
-            const net = require("net");
-            const client = net.createConnection("'"$IPC_SOCK"'", () => {
-                client.write(JSON.stringify({"command": ["get_property", "'"$1"'"]}) + "\n");
-            });
-            client.on("data", (data) => {
-                try {
-                    const rawStr = data.toString().trim();
-                    const fstLn = rawStr.split("\n")[0];
-                    const obj = JSON.parse(fstLn);
-                    if (obj.data !== undefined && obj.data !== null) {
-                        console.log(obj.data);
-                    }
-                } catch(e) {}
-                client.destroy();
-            });
-            client.on("end", () => { client.destroy(); });
-            client.on("error", () => { client.destroy(); });
-        ' 2>/dev/null
+        if [ "$SOC_CH" = "socat" ]; then
+            local cmd_pld
+            cmd_pld=$(python3 "$RD/mpv-util.py" --get-prop <<< "$1" 2>/dev/null)
+            if [ -n "$cmd_pld" ]; then
+                local raw_j
+                raw_j=$(socat -t 1 - "UNIX-CONNECT:$IPC_SOCK" 2>/dev/null <<< "$cmd_pld")
+                if [ -n "$raw_j" ]; then
+                    python3 "$RD/mpv-util.py" --parse-prop <<< "$raw_j" 2>/dev/null
+                fi
+            fi
+        elif [ "$SOC_CH" = "netcat" ]; then
+            local req="{\"command\":[\"get_property\",\"$1\"]}"
+            local res=$(echo "$req" | nc -U "$IPC_SOCK" -w 1 -N 2>/dev/null)
+            if [ -n "$res" ]; then
+                python3 "$RD/mpv-util.py" --parse-prop <<< "$res" 2>/dev/null
+            fi
+        else
+            python3 "$RD/builtinsocket.py" --get-prop "$IPC_SOCK" <<< "$1" 2>/dev/null
+        fi
     fi
 }
 
 send_mpv_cmd() {
     if [ -S "$IPC_SOCK" ]; then
-        node -e '
-            const net = require("net");
-            const client = net.createConnection("'"$IPC_SOCK"'", () => {
-                client.write(JSON.stringify({"command": '"$1"'}) + "\n", () => {
-                    client.destroy();
-                });
-            });
-            client.on("error", () => { client.destroy(); });
-        ' 2>/dev/null
+        if [ "$SOC_CH" = "socat" ]; then
+            local cmd_pld
+            cmd_pld=$(python3 "$RD/mpv-util.py" --send-cmd <<< "$1" 2>/dev/null)
+            [ -n "$cmd_pld" ] && socat -t 1 - "UNIX-CONNECT:$IPC_SOCK" >/dev/null 2>&1 <<< "$cmd_pld"
+        elif [ "$SOC_CH" = "netcat" ]; then
+            echo "{\"command\":$1}" | nc -U "$IPC_SOCK" -w 1 -N >/dev/null 2>&1
+        else
+            python3 "$RD/builtinsocket.py" --send-cmd "$IPC_SOCK" <<< "$1" 2>/dev/null
+        fi
     fi
 }
 
@@ -343,25 +360,19 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
         [ -z "$u_val" ] && u_val=$(q_prop "uploader")
         [ -n "$u_val" ] && cur_upl="$u_val"
         if [ "$shw_pl" == "False" ] && [ -S "$IPC_SOCK" ]; then
-            c_bytes=$(node -e '
-                const net = require("net");
-                const client = net.createConnection("'"$IPC_SOCK"'", () => {
-                    client.write(JSON.stringify({"command":["get_property","demuxer-cache-state"]}) + "\n");
-                });
-                client.on("data", (data) => {
-                    try {
-                        const rawStr = data.toString().trim();
-                        const fstLn = rawStr.split("\n")[0];
-                        const obj = JSON.parse(fstLn);
-                        if (obj.data && obj.data["total-bytes"]) {
-                            console.log(obj.data["total-bytes"]);
-                        } else { console.log(0); }
-                    } catch(e){ console.log(0); }
-                    client.destroy();
-                });
-                client.on("end", () => { client.destroy(); });
-                client.on("error", () => { client.destroy(); });
-            ' 2>/dev/null)
+            if [ "$SOC_CH" = "socat" ]; then
+                cac_j=$(socat -t 1 - "UNIX-CONNECT:$IPC_SOCK" 2>/dev/null <<< '{"command":["get_property","demuxer-cache-state"]}')
+                if [ -n "$cac_j" ]; then
+                    c_bytes=$(python3 "$RD/mpv-util.py" --cache-bytes <<< "$cac_j" 2>/dev/null)
+                fi
+            elif [ "$SOC_CH" = "netcat" ]; then
+                cac_j=$(echo '{"command":["get_property","demuxer-cache-state"]}' | nc -U "$IPC_SOCK" -w 1 -N 2>/dev/null)
+                if [ -n "$cac_j" ]; then
+                    c_bytes=$(python3 "$RD/mpv-util.py" --cache-bytes <<< "$cac_j" 2>/dev/null)
+                fi
+            else
+                c_bytes=$(python3 "$RD/builtinsocket.py" --cache-bytes "$IPC_SOCK" 2>/dev/null)
+            fi
             if [ -n "$c_bytes" ] && [[ "$c_bytes" =~ ^[0-9]+$ ]] && [ "$c_bytes" -gt 0 ]; then
                 cur_sz="$((c_bytes / 1024 / 1024))MB"
             else
@@ -379,7 +390,7 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
     done
     wait "$mpv_pid" 2>/dev/null; rm -f "$IPC_SOCK"
     case "$act_sig" in
-        "exit") printf "\033[2J\033[H"; exit 0 ;;
+        "exit") clean_exit ;;
         "reqry") continue ;;
         "seltrig")
             i=$sel_ptr

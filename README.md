@@ -8,7 +8,7 @@ No more storing songs in mp3s, no more storing songs playlists in cloud services
 ```bash
 docker rmi willyhorizont/musicv-player
 
-sed -i '/alias playmusicsv=/d' ~/.bashrc && echo "alias playmusicsv='\$HOME/musicsv-player/run.sh \$HOME/musicsv-player/musicsv-player.sh'" >> ~/.bashrc
+sed -i '/alias musicsv=/d' ~/.bashrc && echo "alias musicsv='export PYTHONDONTWRITEBYTECODE=1; \$HOME/musicsv-player/run.sh \$HOME/musicsv-player/musicsv-player.sh'" >> ~/.bashrc
 source ~/.bashrc
 
 rm -rf "$HOME/musicsv-player" && git clone https://github.com/willyhorizont/musicsv-player.git
@@ -16,7 +16,7 @@ rm -rf "$HOME/musicsv-player" && git clone https://github.com/willyhorizont/musi
 mkdir -p "$HOME/Music/musicsv-playlist"
 cp -f "$HOME/musicsv-player/"*.csv "$HOME/Music/musicsv-playlist/"
 
-playmusicsv "$HOME/Music/musicsv-playlist/example.csv" --rptall --shuf
+musicsv "$HOME/Music/musicsv-playlist/example.csv" --rptall --shuf
 ```
 
 ## Installation/Updates (Termux)
@@ -30,7 +30,7 @@ termux-setup-storage
 sed -i '/volume-keys =/d' ~/.termux/termux.properties && echo "volume-keys = volume" >> ~/.termux/termux.properties
 termux-reload-settings
 
-sed -i '/alias playmusicsv=/d' ~/.bashrc && echo "alias playmusicsv='\$HOME/musicsv-player/musicsv-player.sh'" >> ~/.bashrc
+sed -i '/alias musicsv=/d' ~/.bashrc && echo "alias musicsv='export PYTHONDONTWRITEBYTECODE=1; \$HOME/musicsv-player/musicsv-player.sh'" >> ~/.bashrc
 source ~/.bashrc
 
 rm -rf "$HOME/musicsv-player" && git clone https://github.com/willyhorizont/musicsv-player.git
@@ -38,12 +38,12 @@ rm -rf "$HOME/musicsv-player" && git clone https://github.com/willyhorizont/musi
 mkdir -p "$HOME/storage/music/musicsv-playlist"
 cp -f "$HOME/musicsv-player/"*.csv "$HOME/storage/music/musicsv-playlist/"
 
-playmusicsv "$HOME/storage/music/musicsv-playlist/example.csv" --rptall --shuf
+musicsv "$HOME/storage/music/musicsv-playlist/example.csv" --rptall --shuf
 ```
 
 ## Usage
 ```bash
-playmusicsv "$HOME/Music/your-playlist.csv" --loop --shuffle
+musicsv "$HOME/Music/your-playlist.csv" --loop --shuffle
 ```
 
 ---

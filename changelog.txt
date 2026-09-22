@@ -1,3 +1,7 @@
+[Last updated: 23 Sep 2026 @ 05:38 AM][version: 0.1.28]
+make socket agnostic between socat netcat and python-builtin;
+testing nodejs version;
+
 [Last updated: 22 Sep 2026 @ 11:56 PM][version: 0.1.27]
 comparing netcat vs socat vs nodefs and node vs python vs bash;
 

@@ -2,7 +2,7 @@
 
 SD=$(dirname "$(realpath "$0")")
 RD=$(realpath "$SD/..")
-V="0.1.27" # ! DON'T FORGET TO CHANGE VERSION BEFORE RUNNING !!!!
+V="0.1.28" # ! DON'T FORGET TO CHANGE VERSION BEFORE RUNNING !!!!
 T=$(date "+%d %b %Y @ %I:%M %p")
 cd "$RD" || exit
 
@@ -12,7 +12,8 @@ H="
 H=$(sed -e '/./,$!d' <<< "$H")
 # ! DON'T FORGET TO CHANGE COMMIT MESSAGE BEFORE RUNNING !!!!
 M="
-comparing netcat vs socat vs nodefs and node vs python vs bash;
+make socket agnostic between socat netcat and python-builtin;
+testing nodejs version;
 "
 M=$(sed -e '/./,$!d' <<< "$M")
 M="$H

@@ -1,5 +1,8 @@
 #!/bin/bash
 
+SD=$(dirname "$(realpath "$0")")
+RD=$(realpath "$SD")
+
 printf "\033[?25l"
 clean_exit() {
     printf "\033[?25h\033[2J\033[H"
@@ -127,7 +130,7 @@ prt_ui() {
 
     local mx_w=$MX_W
 
-    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.27'
+    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.28'
     printf "%s\033[K\n" "$abt"
     prt_sep "-"
     printf "%s\033[K\n" "$(get_anm_chnk "Query: " "${lns[$cur_idx]}" $mx_w)"
@@ -202,16 +205,7 @@ q_prop() {
         local res=$(echo "$req" | nc -U "$IPC_SOCK" -w 1 -N 2>/dev/null)
         
         if [ -n "$res" ]; then
-            echo "$res" | node -e '
-                const fs = require("fs");
-                const raw = fs.readFileSync(0, "utf-8");
-                try {
-                    const obj = JSON.parse(raw.trim());
-                    if (obj.data !== undefined && obj.data !== null) {
-                        console.log(obj.data);
-                    }
-                } catch(e) {}
-            ' 2>/dev/null
+            python3 "$RD/mpv-util.py" --parse-prop <<< "$res" 2>/dev/null
         fi
     fi
 }
@@ -240,8 +234,6 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
     mpv --no-video --ytdl-format=ba --msg-level=all=no --ytdl-raw-options-append=compat-options=no-live-chat --demuxer-lavf-o=reconnect=1,reconnect_at_eof=1,reconnect_streamed=1,reconnect_delay_max=5 --input-ipc-server="$IPC_SOCK" "${sgs[$cur_idx]}" >/dev/null 2>&1 &
     mpv_pid=$!
     ANM_TICK=0
-
-    ipc_tick=0
 
     while kill -0 "$mpv_pid" 2>/dev/null; do
         read -s -n1 -t 0.1 k_inp; r_stat=$?
@@ -333,37 +325,26 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
                     ;;
             esac
         fi
-        ipc_tick=$(( ipc_tick + 1 ))
-        if [ $(( ipc_tick % 5 )) -eq 0 ]; then
-            t_val=$(q_prop "media-title")
-            [[ -n "$t_val" && ! "$t_val" =~ ^ytsearch: && ! "$t_val" =~ ^ytdl:// ]] && cur_tit="$t_val"
-            u_val=$(q_prop "file-tags/uploader")
-            [ -z "$u_val" ] && u_val=$(q_prop "metadata/by-key/Uploader")
-            [ -z "$u_val" ] && u_val=$(q_prop "uploader")
-            [ -n "$u_val" ] && cur_upl="$u_val"
-            if [ "$shw_pl" == "False" ] && [ -S "$IPC_SOCK" ]; then
-                cac_j=$(echo '{"command":["get_property","demuxer-cache-state"]}' | nc -U "$IPC_SOCK" -w 1 -N 2>/dev/null)
-                if [ -n "$cac_j" ]; then
-                    c_bytes=$(echo "$cac_j" | node -e '
-                        const fs = require("fs");
-                        try {
-                            const obj = JSON.parse(fs.readFileSync(0, "utf-8").trim());
-                            if (obj.data && obj.data["total-bytes"]) {
-                                console.log(obj.data["total-bytes"]);
-                            } else { console.log(0); }
-                        } catch(e){ console.log(0); }
-                    ' 2>/dev/null)
-                    if [ -n "$c_bytes" ] && [ "$c_bytes" -gt 0 ]; then
-                        cur_sz="$((c_bytes / 1024 / 1024))MB"
-                    else
-                        cur_sz="0MB"
-                    fi
+        t_val=$(q_prop "media-title")
+        [[ -n "$t_val" && ! "$t_val" =~ ^ytsearch: && ! "$t_val" =~ ^ytdl:// ]] && cur_tit="$t_val"
+        u_val=$(q_prop "file-tags/uploader")
+        [ -z "$u_val" ] && u_val=$(q_prop "metadata/by-key/Uploader")
+        [ -z "$u_val" ] && u_val=$(q_prop "uploader")
+        [ -n "$u_val" ] && cur_upl="$u_val"
+        if [ "$shw_pl" == "False" ] && [ -S "$IPC_SOCK" ]; then
+            cac_j=$(echo '{"command":["get_property","demuxer-cache-state"]}' | nc -U "$IPC_SOCK" -w 1 -N 2>/dev/null)
+            if [ -n "$cac_j" ]; then
+                c_bytes=$(python3 "$RD/mpv-util.py" --cache-bytes <<< "$cac_j" 2>/dev/null)
+                if [ -n "$c_bytes" ] && [[ "$c_bytes" =~ ^[0-9]+$ ]] && [ "$c_bytes" -gt 0 ]; then
+                    cur_sz="$((c_bytes / 1024 / 1024))MB"
+                else
+                    cur_sz="0MB"
                 fi
             fi
-            tmpos=$(q_prop "time-pos") dur=$(q_prop "duration")
-            if [[ "$tmpos" =~ ^[0-9.]+$ ]] && [[ "$dur" =~ ^[0-9.]+$ ]]; then
-                cur_prog="$(fmt_tm "$tmpos") / $(fmt_tm "$dur")"
-            fi
+        fi
+        tmpos=$(q_prop "time-pos") dur=$(q_prop "duration")
+        if [[ "$tmpos" =~ ^[0-9.]+$ ]] && [[ "$dur" =~ ^[0-9.]+$ ]]; then
+            cur_prog="$(fmt_tm "$tmpos") / $(fmt_tm "$dur")"
         fi
         if [ "$is_scrn_pau" == "False" ]; then
             ANM_TICK=$(( ANM_TICK + 1 ))

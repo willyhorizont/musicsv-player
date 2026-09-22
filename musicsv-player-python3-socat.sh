@@ -1,5 +1,15 @@
 #!/bin/bash
 
+SD=$(dirname "$(realpath "$0")")
+RD=$(realpath "$SD")
+
+printf "\033[?25l"
+clean_exit() {
+    printf "\033[?25h\033[2J\033[H"
+    exit 0
+}
+trap clean_exit SIGINT SIGTERM
+
 IPC_SOCK="${TMPDIR:-/tmp}/mpv-socket"
 fp=""
 peln=""
@@ -120,7 +130,7 @@ prt_ui() {
 
     local mx_w=$MX_W
 
-    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.27'
+    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.28'
     printf "%s\033[K\n" "$abt"
     prt_sep "-"
     printf "%s\033[K\n" "$(get_anm_chnk "Query: " "${lns[$cur_idx]}" $mx_w)"
@@ -192,12 +202,12 @@ prt_ui() {
 q_prop() {
     if [ -S "$IPC_SOCK" ]; then
         local cmd_pld
-        cmd_pld=$(python3 -c "import sys, json; print(json.dumps({'command': ['get_property', sys.stdin.read().strip()]}))" <<< "$1" 2>/dev/null)
+        cmd_pld=$(python3 "$RD/mpv-util.py" --get-prop <<< "$1" 2>/dev/null)
         if [ -n "$cmd_pld" ]; then
             local raw_j
-            raw_j=$(socat - "UNIX-CONNECT:$IPC_SOCK" 2>/dev/null <<< "$cmd_pld")
+            raw_j=$(socat -t 1 - "UNIX-CONNECT:$IPC_SOCK" 2>/dev/null <<< "$cmd_pld")
             if [ -n "$raw_j" ]; then
-                python3 -c "import sys, json; print(json.loads(sys.stdin.read()).get('data', ''))" <<< "$raw_j" 2>/dev/null
+                python3 "$RD/mpv-util.py" --parse-prop <<< "$raw_j" 2>/dev/null
             fi
         fi
     fi
@@ -206,8 +216,8 @@ q_prop() {
 send_mpv_cmd() {
     if [ -S "$IPC_SOCK" ]; then
         local cmd_pld
-        cmd_pld=$(python3 -c "import sys, json; print(json.dumps({'command': json.loads(sys.stdin.read().strip())}))" <<< "$1" 2>/dev/null)
-        [ -n "$cmd_pld" ] && socat - "UNIX-CONNECT:$IPC_SOCK" >/dev/null 2>&1 <<< "$cmd_pld"
+        cmd_pld=$(python3 "$RD/mpv-util.py" --send-cmd <<< "$1" 2>/dev/null)
+        [ -n "$cmd_pld" ] && socat -t 1 - "UNIX-CONNECT:$IPC_SOCK" >/dev/null 2>&1 <<< "$cmd_pld"
     fi
 }
 
@@ -327,10 +337,14 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
         [ -z "$u_val" ] && u_val=$(q_prop "uploader")
         [ -n "$u_val" ] && cur_upl="$u_val"
         if [ "$shw_pl" == "False" ] && [ -S "$IPC_SOCK" ]; then
-            cac_j=$(socat - "UNIX-CONNECT:$IPC_SOCK" 2>/dev/null <<< '{"command":["get_property","demuxer-cache-state"]}')
+            cac_j=$(socat -t 1 - "UNIX-CONNECT:$IPC_SOCK" 2>/dev/null <<< '{"command":["get_property","demuxer-cache-state"]}')
             if [ -n "$cac_j" ]; then
-                c_bytes=$(python3 -c "import sys, json; print(json.loads(sys.stdin.read()).get('data', {}).get('total-bytes',0))" <<< "$cac_j" 2>/dev/null)
-                [[ "$c_bytes" =~ ^[0-9]+$ ]] && [ "$c_bytes" -gt 0 ] && cur_sz="$((c_bytes / 1024 / 1024))MB" || cur_sz="0MB"
+                c_bytes=$(python3 "$RD/mpv-util.py" --cache-bytes <<< "$cac_j" 2>/dev/null)
+                if [ -n "$c_bytes" ] && [[ "$c_bytes" =~ ^[0-9]+$ ]] && [ "$c_bytes" -gt 0 ]; then
+                    cur_sz="$((c_bytes / 1024 / 1024))MB"
+                else
+                    cur_sz="0MB"
+                fi
             fi
         fi
         tmpos=$(q_prop "time-pos") dur=$(q_prop "duration")
@@ -344,7 +358,7 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
     done
     wait "$mpv_pid" 2>/dev/null; rm -f "$IPC_SOCK"
     case "$act_sig" in
-        "exit") printf "\033[2J\033[H"; exit 0 ;;
+        "exit") clean_exit ;;
         "reqry") continue ;;
         "seltrig")
             i=$sel_ptr

@@ -4,7 +4,17 @@ https://mpv.io/manual/stable/
 ```bash
 docker rmi willyhorizont/musicv-player
 
-sed -i '/alias playmusicsv=/d' ~/.bashrc && echo "alias playmusicsv='\$HOME/musicsv-player/run.sh \$HOME/musicsv-player/musicsv-player.sh'" >> ~/.bashrc
+sed -i '/alias musicsv=/d' ~/.bashrc && echo "alias musicsv='export PYTHONDONTWRITEBYTECODE=1; \$HOME/musicsv-player/run.sh \$HOME/musicsv-player/musicsv-player.sh'" >> ~/.bashrc
+source ~/.bashrc
+
+sudo rm -rf "$HOME/musicsv-player/__pycache__" && rm -rf "$HOME/musicsv-player" && cp -r "$HOME/Codes/musicsv-player/" "$HOME/musicsv-player/"
+
+mkdir -p "$HOME/Music/musicsv-playlist"
+cp -f "$HOME/musicsv-player/"*.csv "$HOME/Music/musicsv-playlist/"
+
+musicsv "$HOME/Music/musicsv-playlist/campursari-langgeng-music-digital.csv" --rptall --shuf
+
+sed -i '/alias musicsv=/d' ~/.bashrc && echo "alias musicsv='export PYTHONDONTWRITEBYTECODE=1; \$HOME/musicsv-player/run.sh \$HOME/musicsv-player/musicsv-player.sh'" >> ~/.bashrc
 source ~/.bashrc
 
 rm -rf "$HOME/musicsv-player" && cp -r "$HOME/Codes/musicsv-player/" "$HOME/musicsv-player/"
@@ -12,15 +22,9 @@ rm -rf "$HOME/musicsv-player" && cp -r "$HOME/Codes/musicsv-player/" "$HOME/musi
 mkdir -p "$HOME/Music/musicsv-playlist"
 cp -f "$HOME/musicsv-player/"*.csv "$HOME/Music/musicsv-playlist/"
 
-playmusicsv "$HOME/Music/musicsv-playlist/campursari-langgeng-music-digital.csv" --rptall --shuf
+musicsv "$HOME/Music/musicsv-playlist/example.csv" --rptall --shuf
 
-sed -i '/alias playmusicsv=/d' ~/.bashrc && echo "alias playmusicsv='\$HOME/musicsv-player/run.sh \$HOME/musicsv-player/musicsv-player.sh'" >> ~/.bashrc
-source ~/.bashrc
 
-rm -rf "$HOME/musicsv-player" && cp -r "$HOME/Codes/musicsv-player/" "$HOME/musicsv-player/"
-
-mkdir -p "$HOME/Music/musicsv-playlist"
-cp -f "$HOME/musicsv-player/"*.csv "$HOME/Music/musicsv-playlist/"
-
-playmusicsv "$HOME/Music/musicsv-playlist/example.csv" --rptall --shuf
+docker exec -it $(docker ps -q --filter ancestor=willyhorizont/musicv-player) bash
+python3 "$RD/socket.py" --get-prop "/tmp/mpv-socket" <<< "media-title"
 ```
