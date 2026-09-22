@@ -1,5 +1,12 @@
 #!/bin/bash
 
+printf "\033[?25l"
+clean_exit() {
+    printf "\033[?25h\033[2J\033[H"
+    exit 0
+}
+trap clean_exit SIGINT SIGTERM
+
 IPC_SOCK="${TMPDIR:-/tmp}/mpv-socket"
 fp=""
 peln=""
@@ -71,8 +78,12 @@ cur_prog="00:00:00 / 00:00:00"
 pl_scrl=0
 sel_ptr=0
 
+MX_W=$(( COLUMNS - 3 ))
+[ -z "$MX_W" ] || [ "$MX_W" -le 0 ] && MX_W=$(( $(tput cols 2>/dev/null || echo 56) - 3 ))
+trap 'MX_W=$(( $(tput cols 2>/dev/null || echo 56) - 3 ))' SIGWINCH
+
 prt_sep() {
-    printf '%*s' "$(( $(tput cols 2>/dev/null || echo 56) - 3 ))" '' | tr ' ' "${1:-=}" ; printf "\033[K\n"
+    printf '%*s' "$MX_W" '' | tr ' ' "${1:-=}" ; printf "\033[K\n"
 }
 
 get_anm_chnk() {
@@ -114,7 +125,7 @@ prt_ui() {
         disp_fp="\$HOME/${fp#$HOME/}"
     fi
 
-    local mx_w=$(( $(tput cols 2>/dev/null || echo 56) - 3 ))
+    local mx_w=$MX_W
 
     abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.26'
     printf "%s\033[K\n" "$abt"
@@ -187,27 +198,39 @@ prt_ui() {
 
 q_prop() {
     if [ -S "$IPC_SOCK" ]; then
-        local req="{\"command\":[\"get_property\",\"$1\"]}"
-        local res=$(echo "$req" | nc -U "$IPC_SOCK" -w 1 -N 2>/dev/null)
-        
-        if [ -n "$res" ]; then
-            echo "$res" | node -e '
-                const fs = require("fs");
-                const raw = fs.readFileSync(0, "utf-8");
+        node -e '
+            const net = require("net");
+            const client = net.createConnection("'"$IPC_SOCK"'", () => {
+                client.write(JSON.stringify({"command": ["get_property", "'"$1"'"]}) + "\n");
+            });
+            client.on("data", (data) => {
                 try {
-                    const obj = JSON.parse(raw.trim());
+                    const rawStr = data.toString().trim();
+                    const fstLn = rawStr.split("\n")[0];
+                    const obj = JSON.parse(fstLn);
                     if (obj.data !== undefined && obj.data !== null) {
                         console.log(obj.data);
                     }
                 } catch(e) {}
-            ' 2>/dev/null
-        fi
+                client.destroy();
+            });
+            client.on("end", () => { client.destroy(); });
+            client.on("error", () => { client.destroy(); });
+        ' 2>/dev/null
     fi
 }
 
 send_mpv_cmd() {
     if [ -S "$IPC_SOCK" ]; then
-        echo "{\"command\":$1}" | nc -U "$IPC_SOCK" -w 1 -N >/dev/null 2>&1
+        node -e '
+            const net = require("net");
+            const client = net.createConnection("'"$IPC_SOCK"'", () => {
+                client.write(JSON.stringify({"command": '"$1"'}) + "\n", () => {
+                    client.destroy();
+                });
+            });
+            client.on("error", () => { client.destroy(); });
+        ' 2>/dev/null
     fi
 }
 
@@ -331,22 +354,29 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
             [ -z "$u_val" ] && u_val=$(q_prop "uploader")
             [ -n "$u_val" ] && cur_upl="$u_val"
             if [ "$shw_pl" == "False" ] && [ -S "$IPC_SOCK" ]; then
-                cac_j=$(echo '{"command":["get_property","demuxer-cache-state"]}' | nc -U "$IPC_SOCK" -w 1 -N 2>/dev/null)
-                if [ -n "$cac_j" ]; then
-                    c_bytes=$(echo "$cac_j" | node -e '
-                        const fs = require("fs");
+                c_bytes=$(node -e '
+                    const net = require("net");
+                    const client = net.createConnection("'"$IPC_SOCK"'", () => {
+                        client.write(JSON.stringify({"command":["get_property","demuxer-cache-state"]}) + "\n");
+                    });
+                    client.on("data", (data) => {
                         try {
-                            const obj = JSON.parse(fs.readFileSync(0, "utf-8").trim());
+                            const rawStr = data.toString().trim();
+                            const fstLn = rawStr.split("\n")[0];
+                            const obj = JSON.parse(fstLn);
                             if (obj.data && obj.data["total-bytes"]) {
                                 console.log(obj.data["total-bytes"]);
                             } else { console.log(0); }
                         } catch(e){ console.log(0); }
-                    ' 2>/dev/null)
-                    if [ -n "$c_bytes" ] && [ "$c_bytes" -gt 0 ]; then
-                        cur_sz="$((c_bytes / 1024 / 1024))MB"
-                    else
-                        cur_sz="0MB"
-                    fi
+                        client.destroy();
+                    });
+                    client.on("end", () => { client.destroy(); });
+                    client.on("error", () => { client.destroy(); });
+                ' 2>/dev/null)
+                if [ -n "$c_bytes" ] && [[ "$c_bytes" =~ ^[0-9]+$ ]] && [ "$c_bytes" -gt 0 ]; then
+                    cur_sz="$((c_bytes / 1024 / 1024))MB"
+                else
+                    cur_sz="0MB"
                 fi
             fi
             tmpos=$(q_prop "time-pos") dur=$(q_prop "duration")
@@ -361,7 +391,7 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
     done
     wait "$mpv_pid" 2>/dev/null; rm -f "$IPC_SOCK"
     case "$act_sig" in
-        "exit") printf "\033[2J\033[H"; exit 0 ;;
+        "exit") clean_exit ;;
         "reqry") continue ;;
         "seltrig")
             i=$sel_ptr

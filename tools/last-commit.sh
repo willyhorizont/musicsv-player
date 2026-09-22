@@ -2,7 +2,7 @@
 
 SD=$(dirname "$(realpath "$0")")
 RD=$(realpath "$SD/..")
-V="0.1.25" # ! DON'T FORGET TO CHANGE VERSION BEFORE RUNNING !!!!
+V="0.1.26" # ! DON'T FORGET TO CHANGE VERSION BEFORE RUNNING !!!!
 T=$(date "+%d %b %Y @ %I:%M %p")
 cd "$RD" || exit
 
@@ -12,14 +12,14 @@ H="
 H=$(sed -e '/./,$!d' <<< "$H")
 # ! DON'T FORGET TO CHANGE COMMIT MESSAGE BEFORE RUNNING !!!!
 M="
-chmod;
+update netcat version;
 "
 M=$(sed -e '/./,$!d' <<< "$M")
 M="$H
 $M"
 awk -v msg="$M" 'BEGIN {print msg; print ""} {print}' "$RD/changelog.txt" > "$RD/changelog.tmp" && mv "$RD/changelog.tmp" "$RD/changelog.txt"
 
-sed -i "s|github.com/willyhorizont/MusiCSV-Player/tree/[0-9.]*|github.com/willyhorizont/MusiCSV-Player/tree/$V|g" "$RD/musicsv-player.sh"
+sed -i "s|github.com/willyhorizont/MusiCSV-Player/tree/[0-9.]*|github.com/willyhorizont/MusiCSV-Player/tree/$V|g" "$RD/musicsv-player"*.sh
 
 git add changelog.txt
 git add .

@@ -1,12 +1,5 @@
 #!/bin/bash
 
-# printf "\033[?25l"
-# clean_exit() {
-#     printf "\033[?25h\033[2J\033[H"
-#     exit 0
-# }
-# trap clean_exit SIGINT SIGTERM
-
 IPC_SOCK="${TMPDIR:-/tmp}/mpv-socket"
 fp=""
 peln=""
@@ -127,7 +120,7 @@ prt_ui() {
 
     local mx_w=$MX_W
 
-    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.25'
+    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.26'
     printf "%s\033[K\n" "$abt"
     prt_sep "-"
     printf "%s\033[K\n" "$(get_anm_chnk "Query: " "${lns[$cur_idx]}" $mx_w)"
@@ -352,7 +345,6 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
     wait "$mpv_pid" 2>/dev/null; rm -f "$IPC_SOCK"
     case "$act_sig" in
         "exit") printf "\033[2J\033[H"; exit 0 ;;
-        # "exit") clean_exit ;;
         "reqry") continue ;;
         "seltrig")
             i=$sel_ptr

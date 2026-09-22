@@ -1,3 +1,6 @@
+[Last updated: 22 Sep 2026 @ 09:58 PM][version: 0.1.26]
+update netcat version;
+
 [Last updated: 22 Sep 2026 @ 08:00 AM][version: 0.1.25]
 chmod;
 

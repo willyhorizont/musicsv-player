@@ -114,7 +114,7 @@ prt_ui() {
 
     local mx_w=$(( $(tput cols 2>/dev/null || echo 56) - 3 ))
 
-    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.22'
+    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.26'
     printf "\033[H\033[J$abt\033[K\n"
     prt_sep "-"
     printf "%s\033[K\n" "$(get_anm_chnk "Query: " "${lns[$cur_idx]}" $mx_w)"
