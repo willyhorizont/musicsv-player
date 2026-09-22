@@ -120,7 +120,7 @@ prt_ui() {
 
     local mx_w=$MX_W
 
-    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.26'
+    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.27'
     printf "%s\033[K\n" "$abt"
     prt_sep "-"
     printf "%s\033[K\n" "$(get_anm_chnk "Query: " "${lns[$cur_idx]}" $mx_w)"
@@ -246,8 +246,6 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
     mpv_pid=$!
     ANM_TICK=0
 
-    ipc_tick=0
-
     while kill -0 "$mpv_pid" 2>/dev/null; do
         read -s -n1 -t 0.1 k_inp; r_stat=$?
         
@@ -338,44 +336,41 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
                     ;;
             esac
         fi
-        ipc_tick=$(( ipc_tick + 1 ))
-        if [ $(( ipc_tick % 5 )) -eq 0 ]; then
-            t_val=$(q_prop "media-title")
-            [[ -n "$t_val" && ! "$t_val" =~ ^ytsearch: && ! "$t_val" =~ ^ytdl:// ]] && cur_tit="$t_val"
-            u_val=$(q_prop "file-tags/uploader")
-            [ -z "$u_val" ] && u_val=$(q_prop "metadata/by-key/Uploader")
-            [ -z "$u_val" ] && u_val=$(q_prop "uploader")
-            [ -n "$u_val" ] && cur_upl="$u_val"
-            if [ "$shw_pl" == "False" ] && [ -S "$IPC_SOCK" ]; then
-                c_bytes=$(node -e '
-                    const net = require("net");
-                    const client = net.createConnection("'"$IPC_SOCK"'", () => {
-                        client.write(JSON.stringify({"command":["get_property","demuxer-cache-state"]}) + "\n");
-                    });
-                    client.on("data", (data) => {
-                        try {
-                            const rawStr = data.toString().trim();
-                            const fstLn = rawStr.split("\n")[0];
-                            const obj = JSON.parse(fstLn);
-                            if (obj.data && obj.data["total-bytes"]) {
-                                console.log(obj.data["total-bytes"]);
-                            } else { console.log(0); }
-                        } catch(e){ console.log(0); }
-                        client.destroy();
-                    });
-                    client.on("end", () => { client.destroy(); });
-                    client.on("error", () => { client.destroy(); });
-                ' 2>/dev/null)
-                if [ -n "$c_bytes" ] && [[ "$c_bytes" =~ ^[0-9]+$ ]] && [ "$c_bytes" -gt 0 ]; then
-                    cur_sz="$((c_bytes / 1024 / 1024))MB"
-                else
-                    cur_sz="0MB"
-                fi
+        t_val=$(q_prop "media-title")
+        [[ -n "$t_val" && ! "$t_val" =~ ^ytsearch: && ! "$t_val" =~ ^ytdl:// ]] && cur_tit="$t_val"
+        u_val=$(q_prop "file-tags/uploader")
+        [ -z "$u_val" ] && u_val=$(q_prop "metadata/by-key/Uploader")
+        [ -z "$u_val" ] && u_val=$(q_prop "uploader")
+        [ -n "$u_val" ] && cur_upl="$u_val"
+        if [ "$shw_pl" == "False" ] && [ -S "$IPC_SOCK" ]; then
+            c_bytes=$(node -e '
+                const net = require("net");
+                const client = net.createConnection("'"$IPC_SOCK"'", () => {
+                    client.write(JSON.stringify({"command":["get_property","demuxer-cache-state"]}) + "\n");
+                });
+                client.on("data", (data) => {
+                    try {
+                        const rawStr = data.toString().trim();
+                        const fstLn = rawStr.split("\n")[0];
+                        const obj = JSON.parse(fstLn);
+                        if (obj.data && obj.data["total-bytes"]) {
+                            console.log(obj.data["total-bytes"]);
+                        } else { console.log(0); }
+                    } catch(e){ console.log(0); }
+                    client.destroy();
+                });
+                client.on("end", () => { client.destroy(); });
+                client.on("error", () => { client.destroy(); });
+            ' 2>/dev/null)
+            if [ -n "$c_bytes" ] && [[ "$c_bytes" =~ ^[0-9]+$ ]] && [ "$c_bytes" -gt 0 ]; then
+                cur_sz="$((c_bytes / 1024 / 1024))MB"
+            else
+                cur_sz="0MB"
             fi
-            tmpos=$(q_prop "time-pos") dur=$(q_prop "duration")
-            if [[ "$tmpos" =~ ^[0-9.]+$ ]] && [[ "$dur" =~ ^[0-9.]+$ ]]; then
-                cur_prog="$(fmt_tm "$tmpos") / $(fmt_tm "$dur")"
-            fi
+        fi
+        tmpos=$(q_prop "time-pos") dur=$(q_prop "duration")
+        if [[ "$tmpos" =~ ^[0-9.]+$ ]] && [[ "$dur" =~ ^[0-9.]+$ ]]; then
+            cur_prog="$(fmt_tm "$tmpos") / $(fmt_tm "$dur")"
         fi
         if [ "$is_scrn_pau" == "False" ]; then
             ANM_TICK=$(( ANM_TICK + 1 ))

@@ -198,23 +198,39 @@ prt_ui() {
 
 q_prop() {
     if [ -S "$IPC_SOCK" ]; then
-        local cmd_pld
-        cmd_pld=$(python3 -c "import sys, json; print(json.dumps({'command': ['get_property', sys.stdin.read().strip()]}))" <<< "$1" 2>/dev/null)
-        if [ -n "$cmd_pld" ]; then
-            local raw_j
-            raw_j=$(socat - "UNIX-CONNECT:$IPC_SOCK" 2>/dev/null <<< "$cmd_pld")
-            if [ -n "$raw_j" ]; then
-                python3 -c "import sys, json; print(json.loads(sys.stdin.read()).get('data', ''))" <<< "$raw_j" 2>/dev/null
-            fi
-        fi
+        node -e '
+            const net = require("net");
+            const client = net.createConnection("'"$IPC_SOCK"'", () => {
+                client.write(JSON.stringify({"command": ["get_property", "'"$1"'"]}) + "\n");
+            });
+            client.on("data", (data) => {
+                try {
+                    const rawStr = data.toString().trim();
+                    const fstLn = rawStr.split("\n")[0];
+                    const obj = JSON.parse(fstLn);
+                    if (obj.data !== undefined && obj.data !== null) {
+                        console.log(obj.data);
+                    }
+                } catch(e) {}
+                client.destroy();
+            });
+            client.on("end", () => { client.destroy(); });
+            client.on("error", () => { client.destroy(); });
+        ' 2>/dev/null
     fi
 }
 
 send_mpv_cmd() {
     if [ -S "$IPC_SOCK" ]; then
-        local cmd_pld
-        cmd_pld=$(python3 -c "import sys, json; print(json.dumps({'command': json.loads(sys.stdin.read().strip())}))" <<< "$1" 2>/dev/null)
-        [ -n "$cmd_pld" ] && socat - "UNIX-CONNECT:$IPC_SOCK" >/dev/null 2>&1 <<< "$cmd_pld"
+        node -e '
+            const net = require("net");
+            const client = net.createConnection("'"$IPC_SOCK"'", () => {
+                client.write(JSON.stringify({"command": '"$1"'}) + "\n", () => {
+                    client.destroy();
+                });
+            });
+            client.on("error", () => { client.destroy(); });
+        ' 2>/dev/null
     fi
 }
 
@@ -236,6 +252,8 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
     mpv --no-video --ytdl-format=ba --msg-level=all=no --ytdl-raw-options-append=compat-options=no-live-chat --demuxer-lavf-o=reconnect=1,reconnect_at_eof=1,reconnect_streamed=1,reconnect_delay_max=5 --input-ipc-server="$IPC_SOCK" "${sgs[$cur_idx]}" >/dev/null 2>&1 &
     mpv_pid=$!
     ANM_TICK=0
+
+    ipc_tick=0
 
     while kill -0 "$mpv_pid" 2>/dev/null; do
         read -s -n1 -t 0.1 k_inp; r_stat=$?
@@ -327,22 +345,44 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
                     ;;
             esac
         fi
-        t_val=$(q_prop "media-title")
-        [[ -n "$t_val" && ! "$t_val" =~ ^ytsearch: && ! "$t_val" =~ ^ytdl:// ]] && cur_tit="$t_val"
-        u_val=$(q_prop "file-tags/uploader")
-        [ -z "$u_val" ] && u_val=$(q_prop "metadata/by-key/Uploader")
-        [ -z "$u_val" ] && u_val=$(q_prop "uploader")
-        [ -n "$u_val" ] && cur_upl="$u_val"
-        if [ "$shw_pl" == "False" ] && [ -S "$IPC_SOCK" ]; then
-            cac_j=$(socat - "UNIX-CONNECT:$IPC_SOCK" 2>/dev/null <<< '{"command":["get_property","demuxer-cache-state"]}')
-            if [ -n "$cac_j" ]; then
-                c_bytes=$(python3 -c "import sys, json; print(json.loads(sys.stdin.read()).get('data', {}).get('total-bytes',0))" <<< "$cac_j" 2>/dev/null)
-                [[ "$c_bytes" =~ ^[0-9]+$ ]] && [ "$c_bytes" -gt 0 ] && cur_sz="$((c_bytes / 1024 / 1024))MB" || cur_sz="0MB"
+        ipc_tick=$(( ipc_tick + 1 ))
+        if [ $(( ipc_tick % 5 )) -eq 0 ]; then
+            t_val=$(q_prop "media-title")
+            [[ -n "$t_val" && ! "$t_val" =~ ^ytsearch: && ! "$t_val" =~ ^ytdl:// ]] && cur_tit="$t_val"
+            u_val=$(q_prop "file-tags/uploader")
+            [ -z "$u_val" ] && u_val=$(q_prop "metadata/by-key/Uploader")
+            [ -z "$u_val" ] && u_val=$(q_prop "uploader")
+            [ -n "$u_val" ] && cur_upl="$u_val"
+            if [ "$shw_pl" == "False" ] && [ -S "$IPC_SOCK" ]; then
+                c_bytes=$(node -e '
+                    const net = require("net");
+                    const client = net.createConnection("'"$IPC_SOCK"'", () => {
+                        client.write(JSON.stringify({"command":["get_property","demuxer-cache-state"]}) + "\n");
+                    });
+                    client.on("data", (data) => {
+                        try {
+                            const rawStr = data.toString().trim();
+                            const fstLn = rawStr.split("\n")[0];
+                            const obj = JSON.parse(fstLn);
+                            if (obj.data && obj.data["total-bytes"]) {
+                                console.log(obj.data["total-bytes"]);
+                            } else { console.log(0); }
+                        } catch(e){ console.log(0); }
+                        client.destroy();
+                    });
+                    client.on("end", () => { client.destroy(); });
+                    client.on("error", () => { client.destroy(); });
+                ' 2>/dev/null)
+                if [ -n "$c_bytes" ] && [[ "$c_bytes" =~ ^[0-9]+$ ]] && [ "$c_bytes" -gt 0 ]; then
+                    cur_sz="$((c_bytes / 1024 / 1024))MB"
+                else
+                    cur_sz="0MB"
+                fi
             fi
-        fi
-        tmpos=$(q_prop "time-pos") dur=$(q_prop "duration")
-        if [[ "$tmpos" =~ ^[0-9.]+$ ]] && [[ "$dur" =~ ^[0-9.]+$ ]]; then
-            cur_prog="$(fmt_tm "$tmpos") / $(fmt_tm "$dur")"
+            tmpos=$(q_prop "time-pos") dur=$(q_prop "duration")
+            if [[ "$tmpos" =~ ^[0-9.]+$ ]] && [[ "$dur" =~ ^[0-9.]+$ ]]; then
+                cur_prog="$(fmt_tm "$tmpos") / $(fmt_tm "$dur")"
+            fi
         fi
         if [ "$is_scrn_pau" == "False" ]; then
             ANM_TICK=$(( ANM_TICK + 1 ))

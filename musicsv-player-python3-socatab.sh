@@ -237,6 +237,8 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
     mpv_pid=$!
     ANM_TICK=0
 
+    ipc_tick=0
+
     while kill -0 "$mpv_pid" 2>/dev/null; do
         read -s -n1 -t 0.1 k_inp; r_stat=$?
         
@@ -327,22 +329,25 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
                     ;;
             esac
         fi
-        t_val=$(q_prop "media-title")
-        [[ -n "$t_val" && ! "$t_val" =~ ^ytsearch: && ! "$t_val" =~ ^ytdl:// ]] && cur_tit="$t_val"
-        u_val=$(q_prop "file-tags/uploader")
-        [ -z "$u_val" ] && u_val=$(q_prop "metadata/by-key/Uploader")
-        [ -z "$u_val" ] && u_val=$(q_prop "uploader")
-        [ -n "$u_val" ] && cur_upl="$u_val"
-        if [ "$shw_pl" == "False" ] && [ -S "$IPC_SOCK" ]; then
-            cac_j=$(socat - "UNIX-CONNECT:$IPC_SOCK" 2>/dev/null <<< '{"command":["get_property","demuxer-cache-state"]}')
-            if [ -n "$cac_j" ]; then
-                c_bytes=$(python3 -c "import sys, json; print(json.loads(sys.stdin.read()).get('data', {}).get('total-bytes',0))" <<< "$cac_j" 2>/dev/null)
-                [[ "$c_bytes" =~ ^[0-9]+$ ]] && [ "$c_bytes" -gt 0 ] && cur_sz="$((c_bytes / 1024 / 1024))MB" || cur_sz="0MB"
+        ipc_tick=$(( ipc_tick + 1 ))
+        if [ $(( ipc_tick % 5 )) -eq 0 ]; then
+            t_val=$(q_prop "media-title")
+            [[ -n "$t_val" && ! "$t_val" =~ ^ytsearch: && ! "$t_val" =~ ^ytdl:// ]] && cur_tit="$t_val"
+            u_val=$(q_prop "file-tags/uploader")
+            [ -z "$u_val" ] && u_val=$(q_prop "metadata/by-key/Uploader")
+            [ -z "$u_val" ] && u_val=$(q_prop "uploader")
+            [ -n "$u_val" ] && cur_upl="$u_val"
+            if [ "$shw_pl" == "False" ] && [ -S "$IPC_SOCK" ]; then
+                cac_j=$(socat - "UNIX-CONNECT:$IPC_SOCK" 2>/dev/null <<< '{"command":["get_property","demuxer-cache-state"]}')
+                if [ -n "$cac_j" ]; then
+                    c_bytes=$(python3 -c "import sys, json; print(json.loads(sys.stdin.read()).get('data', {}).get('total-bytes',0))" <<< "$cac_j" 2>/dev/null)
+                    [[ "$c_bytes" =~ ^[0-9]+$ ]] && [ "$c_bytes" -gt 0 ] && cur_sz="$((c_bytes / 1024 / 1024))MB" || cur_sz="0MB"
+                fi
             fi
-        fi
-        tmpos=$(q_prop "time-pos") dur=$(q_prop "duration")
-        if [[ "$tmpos" =~ ^[0-9.]+$ ]] && [[ "$dur" =~ ^[0-9.]+$ ]]; then
-            cur_prog="$(fmt_tm "$tmpos") / $(fmt_tm "$dur")"
+            tmpos=$(q_prop "time-pos") dur=$(q_prop "duration")
+            if [[ "$tmpos" =~ ^[0-9.]+$ ]] && [[ "$dur" =~ ^[0-9.]+$ ]]; then
+                cur_prog="$(fmt_tm "$tmpos") / $(fmt_tm "$dur")"
+            fi
         fi
         if [ "$is_scrn_pau" == "False" ]; then
             ANM_TICK=$(( ANM_TICK + 1 ))

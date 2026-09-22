@@ -127,7 +127,7 @@ prt_ui() {
 
     local mx_w=$MX_W
 
-    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.26'
+    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.27'
     printf "%s\033[K\n" "$abt"
     prt_sep "-"
     printf "%s\033[K\n" "$(get_anm_chnk "Query: " "${lns[$cur_idx]}" $mx_w)"
@@ -198,39 +198,27 @@ prt_ui() {
 
 q_prop() {
     if [ -S "$IPC_SOCK" ]; then
-        node -e '
-            const net = require("net");
-            const client = net.createConnection("'"$IPC_SOCK"'", () => {
-                client.write(JSON.stringify({"command": ["get_property", "'"$1"'"]}) + "\n");
-            });
-            client.on("data", (data) => {
+        local req="{\"command\":[\"get_property\",\"$1\"]}"
+        local res=$(echo "$req" | nc -U "$IPC_SOCK" -w 1 -N 2>/dev/null)
+        
+        if [ -n "$res" ]; then
+            echo "$res" | node -e '
+                const fs = require("fs");
+                const raw = fs.readFileSync(0, "utf-8");
                 try {
-                    const rawStr = data.toString().trim();
-                    const fstLn = rawStr.split("\n")[0];
-                    const obj = JSON.parse(fstLn);
+                    const obj = JSON.parse(raw.trim());
                     if (obj.data !== undefined && obj.data !== null) {
                         console.log(obj.data);
                     }
                 } catch(e) {}
-                client.destroy();
-            });
-            client.on("end", () => { client.destroy(); });
-            client.on("error", () => { client.destroy(); });
-        ' 2>/dev/null
+            ' 2>/dev/null
+        fi
     fi
 }
 
 send_mpv_cmd() {
     if [ -S "$IPC_SOCK" ]; then
-        node -e '
-            const net = require("net");
-            const client = net.createConnection("'"$IPC_SOCK"'", () => {
-                client.write(JSON.stringify({"command": '"$1"'}) + "\n", () => {
-                    client.destroy();
-                });
-            });
-            client.on("error", () => { client.destroy(); });
-        ' 2>/dev/null
+        echo "{\"command\":$1}" | nc -U "$IPC_SOCK" -w 1 -N >/dev/null 2>&1
     fi
 }
 
@@ -354,29 +342,22 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
             [ -z "$u_val" ] && u_val=$(q_prop "uploader")
             [ -n "$u_val" ] && cur_upl="$u_val"
             if [ "$shw_pl" == "False" ] && [ -S "$IPC_SOCK" ]; then
-                c_bytes=$(node -e '
-                    const net = require("net");
-                    const client = net.createConnection("'"$IPC_SOCK"'", () => {
-                        client.write(JSON.stringify({"command":["get_property","demuxer-cache-state"]}) + "\n");
-                    });
-                    client.on("data", (data) => {
+                cac_j=$(echo '{"command":["get_property","demuxer-cache-state"]}' | nc -U "$IPC_SOCK" -w 1 -N 2>/dev/null)
+                if [ -n "$cac_j" ]; then
+                    c_bytes=$(echo "$cac_j" | node -e '
+                        const fs = require("fs");
                         try {
-                            const rawStr = data.toString().trim();
-                            const fstLn = rawStr.split("\n")[0];
-                            const obj = JSON.parse(fstLn);
+                            const obj = JSON.parse(fs.readFileSync(0, "utf-8").trim());
                             if (obj.data && obj.data["total-bytes"]) {
                                 console.log(obj.data["total-bytes"]);
                             } else { console.log(0); }
                         } catch(e){ console.log(0); }
-                        client.destroy();
-                    });
-                    client.on("end", () => { client.destroy(); });
-                    client.on("error", () => { client.destroy(); });
-                ' 2>/dev/null)
-                if [ -n "$c_bytes" ] && [[ "$c_bytes" =~ ^[0-9]+$ ]] && [ "$c_bytes" -gt 0 ]; then
-                    cur_sz="$((c_bytes / 1024 / 1024))MB"
-                else
-                    cur_sz="0MB"
+                    ' 2>/dev/null)
+                    if [ -n "$c_bytes" ] && [ "$c_bytes" -gt 0 ]; then
+                        cur_sz="$((c_bytes / 1024 / 1024))MB"
+                    else
+                        cur_sz="0MB"
+                    fi
                 fi
             fi
             tmpos=$(q_prop "time-pos") dur=$(q_prop "duration")

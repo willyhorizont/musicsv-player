@@ -120,7 +120,7 @@ prt_ui() {
 
     local mx_w=$MX_W
 
-    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.26'
+    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.27'
     printf "%s\033[K\n" "$abt"
     prt_sep "-"
     printf "%s\033[K\n" "$(get_anm_chnk "Query: " "${lns[$cur_idx]}" $mx_w)"
@@ -332,10 +332,10 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
                 c_bytes=$(python3 -c "import sys, json; print(json.loads(sys.stdin.read()).get('data', {}).get('total-bytes',0))" <<< "$cac_j" 2>/dev/null)
                 [[ "$c_bytes" =~ ^[0-9]+$ ]] && [ "$c_bytes" -gt 0 ] && cur_sz="$((c_bytes / 1024 / 1024))MB" || cur_sz="0MB"
             fi
-            tmpos=$(q_prop "time-pos") dur=$(q_prop "duration")
-            if [[ "$tmpos" =~ ^[0-9.]+$ ]] && [[ "$dur" =~ ^[0-9.]+$ ]]; then
-                cur_prog="$(fmt_tm "$tmpos") / $(fmt_tm "$dur")"
-            fi
+        fi
+        tmpos=$(q_prop "time-pos") dur=$(q_prop "duration")
+        if [[ "$tmpos" =~ ^[0-9.]+$ ]] && [[ "$dur" =~ ^[0-9.]+$ ]]; then
+            cur_prog="$(fmt_tm "$tmpos") / $(fmt_tm "$dur")"
         fi
         if [ "$is_scrn_pau" == "False" ]; then
             ANM_TICK=$(( ANM_TICK + 1 ))

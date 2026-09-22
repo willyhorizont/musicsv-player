@@ -1,3 +1,6 @@
+[Last updated: 22 Sep 2026 @ 11:56 PM][version: 0.1.27]
+comparing netcat vs socat vs nodefs and node vs python vs bash;
+
 [Last updated: 22 Sep 2026 @ 09:58 PM][version: 0.1.26]
 update netcat version;
 
