@@ -232,8 +232,7 @@ send_mpv_cmd() {
 }
 
 fmt_tm() {
-    local sec="${1%.*}"
-    printf '%(%T)T' "$sec" 2>/dev/null || echo "00:00:00"
+    date -u -d "@${1%.*}" +%T 2>/dev/null || echo "00:00:00"
 }
 
 printf "\033[2J"

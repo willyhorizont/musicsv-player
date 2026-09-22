@@ -2,7 +2,7 @@
 
 SD=$(dirname "$(realpath "$0")")
 RD=$(realpath "$SD/..")
-V="0.1.23" # ! DON'T FORGET TO CHANGE VERSION BEFORE RUNNING !!!!
+V="0.1.24" # ! DON'T FORGET TO CHANGE VERSION BEFORE RUNNING !!!!
 T=$(date "+%d %b %Y @ %I:%M %p")
 cd "$RD" || exit
 
@@ -12,7 +12,7 @@ H="
 H=$(sed -e '/./,$!d' <<< "$H")
 # ! DON'T FORGET TO CHANGE COMMIT MESSAGE BEFORE RUNNING !!!!
 M="
-try comparing socat vs netcat vs net nodejs to see which one smoother;
+fix fmt_tm;
 "
 M=$(sed -e '/./,$!d' <<< "$M")
 M="$H

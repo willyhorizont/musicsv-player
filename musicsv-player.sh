@@ -127,7 +127,7 @@ prt_ui() {
 
     local mx_w=$MX_W
 
-    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.23'
+    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.24'
     printf "%s\033[K\n" "$abt"
     prt_sep "-"
     printf "%s\033[K\n" "$(get_anm_chnk "Query: " "${lns[$cur_idx]}" $mx_w)"
@@ -219,8 +219,7 @@ send_mpv_cmd() {
 }
 
 fmt_tm() {
-    local sec="${1%.*}"
-    printf '%(%T)T' "$sec" 2>/dev/null || echo "00:00:00"
+    date -u -d "@${1%.*}" +%T 2>/dev/null || echo "00:00:00"
 }
 
 printf "\033[2J"
