@@ -317,24 +317,33 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
                 [pP]) act_sig="next"; kill "$mpv_pid" 2>/dev/null; break ;;
                 [tT])
                     if [ "$shw_pl" == "True" ]; then
+                        ttot_lns=${#lns[@]}
                         if [ $sel_ptr -gt 0 ]; then
                             sel_ptr=$(( sel_ptr - 1 ))
                             if [ $sel_ptr -lt $pl_scrl ]; then
                                 pl_scrl=$sel_ptr
                             fi
-                            prt_ui $i;
+                        else
+                            sel_ptr=$(( ttot_lns - 1 ))
+                            pl_scrl=$(( ttot_lns - 3 ))
+                            [ $pl_scrl -lt 0 ] && pl_scrl=0
                         fi
+                        prt_ui $i;
                     fi
                     ;;
                 [fF])
                     if [ "$shw_pl" == "True" ]; then
-                        if [ $sel_ptr -lt $(( ${#lns[@]} - 1 )) ]; then
+                        ttot_lns=${#lns[@]}
+                        if [ $sel_ptr -lt $(( ttot_lns - 1 )) ]; then
                             sel_ptr=$(( sel_ptr + 1 ))
                             if [ $sel_ptr -gt $(( pl_scrl + 2 )) ]; then
                                 pl_scrl=$(( sel_ptr - 2 ))
                             fi
-                            prt_ui $i;
+                        else
+                            sel_ptr=0
+                            pl_scrl=0
                         fi
+                        prt_ui $i;
                     fi
                     ;;
                 [mM])

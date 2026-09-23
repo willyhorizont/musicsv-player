@@ -6,25 +6,21 @@ docker rmi willyhorizont/musicv-player
 
 
 
-sed -i '/alias musicsv=/d' ~/.bashrc && echo "alias musicsv='export PYTHONDONTWRITEBYTECODE=1; \$HOME/musicsv-player/run.sh \$HOME/musicsv-player/musicsv-player.sh'" >> ~/.bashrc
-source ~/.bashrc
+sed -i '/alias musicsv=/d' ~/.bashrc && echo "alias musicsv='export PYTHONDONTWRITEBYTECODE=1; \$HOME/musicsv-player/run.sh \$HOME/musicsv-player/musicsv-player.sh'" >> ~/.bashrc && source ~/.bashrc
 
 sudo rm -rf "$HOME/musicsv-player/__pycache__" && rm -rf "$HOME/musicsv-player" && cp -r "$HOME/Codes/musicsv-player/" "$HOME/musicsv-player/"
 
-mkdir -p "$HOME/Music/musicsv-playlist"
-cp -f "$HOME/musicsv-player/"*.csv "$HOME/Music/musicsv-playlist/"
+mkdir -p "$HOME/Music/musicsv-playlist" && cp -f "$HOME/musicsv-player/"*.csv "$HOME/Music/musicsv-playlist/"
 
 musicsv "$HOME/Music/musicsv-playlist/campursari-langgeng-music-digital.csv" --rptall --shuf
 
 
 
-sed -i '/alias musicsv=/d' ~/.bashrc && echo "alias musicsv='export PYTHONDONTWRITEBYTECODE=1; \$HOME/musicsv-player/run.sh \$HOME/musicsv-player/musicsv-player.sh'" >> ~/.bashrc
-source ~/.bashrc
+sed -i '/alias musicsv=/d' ~/.bashrc && echo "alias musicsv='export PYTHONDONTWRITEBYTECODE=1; \$HOME/musicsv-player/run.sh \$HOME/musicsv-player/musicsv-player.sh'" >> ~/.bashrc && source ~/.bashrc
 
 sudo rm -rf "$HOME/musicsv-player/__pycache__" && rm -rf "$HOME/musicsv-player" && cp -r "$HOME/Codes/musicsv-player/" "$HOME/musicsv-player/"
 
-mkdir -p "$HOME/Music/musicsv-playlist"
-cp -f "$HOME/musicsv-player/"*.csv "$HOME/Music/musicsv-playlist/"
+mkdir -p "$HOME/Music/musicsv-playlist" && cp -f "$HOME/musicsv-player/"*.csv "$HOME/Music/musicsv-playlist/"
 
 musicsv "$HOME/Music/musicsv-playlist/example.csv" --rptall --shuf
 

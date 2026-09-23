@@ -176,7 +176,7 @@ def prt_scrn(stdscr, actv_stp):
     if fp:
         disp_fp = fp.replace(os.environ.get("HOME", ""), "$HOME")
 
-    abt = 'github.com/willyhorizont/MusiCSV-Player/tree/0.2.0'
+    abt = 'github.com/willyhorizont/MusiCSV-Player/tree/0.2.1'
     stdscr.addstr(f"{abt}\n")
     prt_sep("-")
     
@@ -300,14 +300,26 @@ def main(stdscr):
                     proc.terminate()
                     break
                 elif k in ("t", "T"):
-                    if shw_pl and sel_ptr > 0:
-                        sel_ptr -= 1
-                        if sel_ptr < pl_scrl: pl_scrl = sel_ptr
+                    if shw_pl:
+                        tot_lns = len(lns)
+                        if sel_ptr > 0:
+                            sel_ptr -= 1
+                            if sel_ptr < pl_scrl: pl_scrl = sel_ptr
+                        else:
+                            sel_ptr = tot_lns - 1
+                            pl_scrl = tot_lns - 3
+                            if pl_scrl < 0: pl_scrl = 0
                         prt_scrn(stdscr, i)
+                        
                 elif k in ("f", "F"):
-                    if shw_pl and sel_ptr < (len(lns) - 1):
-                        sel_ptr += 1
-                        if sel_ptr > (pl_scrl + 2): pl_scrl = sel_ptr - 2
+                    if shw_pl:
+                        tot_lns = len(lns)
+                        if sel_ptr < (tot_lns - 1):
+                            sel_ptr += 1
+                            if sel_ptr > (pl_scrl + 2): pl_scrl = sel_ptr - 2
+                        else:
+                            sel_ptr = 0
+                            pl_scrl = 0
                         prt_scrn(stdscr, i)
                 elif k in ("m", "M"):
                     shw_pl = not shw_pl
