@@ -21,7 +21,9 @@ is_shuf="False"
 shw_pl="False"
 is_scrn_pau="False"
 frc_cat=""
+rnr="py"
 declare -a sgs=() lns=() reqry_offsets=()
+
 for arg in "$@"; do
     [[ "$arg" == "--rptall" ]] && is_rptall="True" && continue
     [[ "$arg" == "--rptone" ]] && is_rptone="True" && continue
@@ -32,17 +34,47 @@ for arg in "$@"; do
         frc_cat="${arg#*=}"
         continue
     elif [[ "$arg" == "--cat" ]]; then
-        frc_cat="TRCK_NXT_ARG"
+        frc_cat="TRCK_NXT_ARG_CAT"
         continue
     fi
-    if [ "$frc_cat" == "TRCK_NXT_ARG" ]; then
+    if [ "$frc_cat" == "TRCK_NXT_ARG_CAT" ]; then
         frc_cat="$arg"
+        continue
+    fi
+
+    if [[ "$arg" =~ ^--rnr= ]]; then
+        rnr="${arg#*=}"
+        continue
+    elif [[ "$arg" == "--rnr" ]]; then
+        rnr="TRCK_NXT_ARG_RNR"
+        continue
+    fi
+    if [ "$rnr" == "TRCK_NXT_ARG_RNR" ]; then
+        rnr="$arg"
         continue
     fi
     
     [[ "$arg" =~ ^-- ]] && continue
     [ -z "$fp" ] && fp="$arg" || { [[ ! "$arg" =~ ^[[:space:]]*# ]] && lns+=("$arg"); }
 done
+
+if [ "$rnr" == "js" ]; then
+    UTIL_RUNNER="node"
+    UTIL_EXT="js"
+else
+    UTIL_RUNNER="python3"
+    UTIL_EXT="py"
+fi
+
+if [ -n "$fp" ]; then
+    if [[ "$fp" != *"/"* ]] || [[ "$fp" =~ ^\./ ]]; then
+        if [[ "$fp" =~ ^\./ ]]; then
+            fp="${PWD}/${fp#./}"
+        else
+            fp="${PWD}/${fp}"
+        fi
+    fi
+fi
 
 if [ -n "$frc_cat" ]; then
     if [[ "$frc_cat" =~ ^(socat|netcat|builtin)$ ]]; then
@@ -239,22 +271,22 @@ q_prop() {
     if [ -S "$IPC_SOCK" ]; then
         if [ "$SOC_CH" = "socat" ]; then
             local cmd_pld
-            cmd_pld=$(node "$RD/mpv-util.js" --get-prop <<< "$1" 2>/dev/null)
+            cmd_pld=$($UTIL_RUNNER "$RD/mpv-util.$UTIL_EXT" --get-prop <<< "$1" 2>/dev/null)
             if [ -n "$cmd_pld" ]; then
                 local raw_j
                 raw_j=$(socat -t 1 - "UNIX-CONNECT:$IPC_SOCK" 2>/dev/null <<< "$cmd_pld")
                 if [ -n "$raw_j" ]; then
-                    node "$RD/mpv-util.js" --parse-prop <<< "$raw_j" 2>/dev/null
+                    $UTIL_RUNNER "$RD/mpv-util.$UTIL_EXT" --parse-prop <<< "$raw_j" 2>/dev/null
                 fi
             fi
         elif [ "$SOC_CH" = "netcat" ]; then
             local req="{\"command\":[\"get_property\",\"$1\"]}"
             local res=$(echo "$req" | nc -U "$IPC_SOCK" -w 1 -N 2>/dev/null)
             if [ -n "$res" ]; then
-                node "$RD/mpv-util.js" --parse-prop <<< "$res" 2>/dev/null
+                $UTIL_RUNNER "$RD/mpv-util.$UTIL_EXT" --parse-prop <<< "$res" 2>/dev/null
             fi
         else
-            node "$RD/builtinsocket.js" --get-prop "$IPC_SOCK" <<< "$1" 2>/dev/null
+            $UTIL_RUNNER "$RD/builtinsocket.$UTIL_EXT" --get-prop "$IPC_SOCK" <<< "$1" 2>/dev/null
         fi
     fi
 }
@@ -263,12 +295,12 @@ send_mpv_cmd() {
     if [ -S "$IPC_SOCK" ]; then
         if [ "$SOC_CH" = "socat" ]; then
             local cmd_pld
-            cmd_pld=$(node "$RD/mpv-util.js" --send-cmd <<< "$1" 2>/dev/null)
+            cmd_pld=$($UTIL_RUNNER "$RD/mpv-util.$UTIL_EXT" --send-cmd <<< "$1" 2>/dev/null)
             [ -n "$cmd_pld" ] && socat -t 1 - "UNIX-CONNECT:$IPC_SOCK" >/dev/null 2>&1 <<< "$cmd_pld"
         elif [ "$SOC_CH" = "netcat" ]; then
             echo "{\"command\":$1}" | nc -U "$IPC_SOCK" -w 1 -N >/dev/null 2>&1
         else
-            node "$RD/builtinsocket.js" --send-cmd "$IPC_SOCK" <<< "$1" 2>/dev/null
+            $UTIL_RUNNER "$RD/builtinsocket.$UTIL_EXT" --send-cmd "$IPC_SOCK" <<< "$1" 2>/dev/null
         fi
     fi
 }
@@ -284,10 +316,8 @@ sel_ptr=0
 while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
     cur_idx=${ord[$i]} act_sig="none" cur_tit="Loading title..." cur_upl="Loading uploader info..." cur_sz="0MB" cur_prog="00:00:00 / 00:00:00"
     is_scrn_pau="False"
-    
     rm -f "$IPC_SOCK"
     prt_ui $i
-
     mpv --no-video --ytdl-format=ba --msg-level=all=no --ytdl-raw-options-append=compat-options=no-live-chat --demuxer-lavf-o=reconnect=1,reconnect_at_eof=1,reconnect_streamed=1,reconnect_delay_max=5 --input-ipc-server="$IPC_SOCK" "${sgs[$cur_idx]}" >/dev/null 2>&1 &
     mpv_pid=$!
     ANM_TICK=0
@@ -399,15 +429,15 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
             if [ "$SOC_CH" = "socat" ]; then
                 cac_j=$(socat -t 1 - "UNIX-CONNECT:$IPC_SOCK" 2>/dev/null <<< '{"command":["get_property","demuxer-cache-state"]}')
                 if [ -n "$cac_j" ]; then
-                    c_bytes=$(node "$RD/mpv-util.js" --cache-bytes <<< "$cac_j" 2>/dev/null)
+                    c_bytes=$($UTIL_RUNNER "$RD/mpv-util.$UTIL_EXT" --cache-bytes <<< "$cac_j" 2>/dev/null)
                 fi
             elif [ "$SOC_CH" = "netcat" ]; then
                 cac_j=$(echo '{"command":["get_property","demuxer-cache-state"]}' | nc -U "$IPC_SOCK" -w 1 -N 2>/dev/null)
                 if [ -n "$cac_j" ]; then
-                    c_bytes=$(node "$RD/mpv-util.js" --cache-bytes <<< "$cac_j" 2>/dev/null)
+                    c_bytes=$($UTIL_RUNNER "$RD/mpv-util.$UTIL_EXT" --cache-bytes <<< "$cac_j" 2>/dev/null)
                 fi
             else
-                c_bytes=$(node "$RD/builtinsocket.js" --cache-bytes "$IPC_SOCK" 2>/dev/null)
+                c_bytes=$($UTIL_RUNNER "$RD/builtinsocket.$UTIL_EXT" --cache-bytes "$IPC_SOCK" 2>/dev/null)
             fi
             if [ -n "$c_bytes" ] && [[ "$c_bytes" =~ ^[0-9]+$ ]] && [ "$c_bytes" -gt 0 ]; then
                 cur_sz="$((c_bytes / 1024 / 1024))MB"

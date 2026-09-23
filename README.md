@@ -8,13 +8,14 @@ No more storing songs in mp3s, no more storing songs playlists in cloud services
 ```bash
 docker rmi willyhorizont/musicv-player
 
-sed -i '/alias musicsv=/d' ~/.bashrc && echo "alias musicsv='export PYTHONDONTWRITEBYTECODE=1; \$HOME/musicsv-player/run.sh \$HOME/musicsv-player/musicsv-player.py'" >> ~/.bashrc && source ~/.bashrc
+sed -i '/alias musicsv=/d' ~/.bashrc && echo "alias musicsv='export PYTHONDONTWRITEBYTECODE=1; \$HOME/musicsv-player/runner.sh \$HOME/musicsv-player/musicsv-player.sh'" >> ~/.bashrc && source ~/.bashrc
 
-rm -rf "$HOME/musicsv-player" && git clone https://github.com/willyhorizont/musicsv-player.git
+sudo rm -rf "$HOME/musicsv-player/__pycache__" && rm -rf "$HOME/musicsv-player" && git clone https://github.com/willyhorizont/musicsv-player.git
 
-mkdir -p "$HOME/Music/musicsv-playlist" && cp -f "$HOME/musicsv-player/"*.csv "$HOME/Music/musicsv-playlist/"
+PL_LOC="$HOME/Music/musicsv-playlist"
+mkdir -p "$PL_LOC" && cp -f "$HOME/musicsv-player/"*.csv "$PL_LOC/"
 
-musicsv "$HOME/Music/musicsv-playlist/example.csv" --rptall --shuf
+musicsv "$PL_LOC/example.csv" --rptall --shuf
 ```
 
 ## Installation/Updates (Termux)
@@ -28,13 +29,14 @@ termux-setup-storage
 sed -i '/volume-keys =/d' ~/.termux/termux.properties && echo "volume-keys = volume" >> ~/.termux/termux.properties
 termux-reload-settings
 
-sed -i '/alias musicsv=/d' ~/.bashrc && echo "alias musicsv='export PYTHONDONTWRITEBYTECODE=1; \$HOME/musicsv-player/musicsv-player.py'" >> ~/.bashrc && source ~/.bashrc
+sed -i '/alias musicsv=/d' ~/.bashrc && echo "alias musicsv='export PYTHONDONTWRITEBYTECODE=1; \$HOME/musicsv-player/musicsv-player.sh'" >> ~/.bashrc && source ~/.bashrc
 
-rm -rf "$HOME/musicsv-player" && git clone https://github.com/willyhorizont/musicsv-player.git
+sudo rm -rf "$HOME/musicsv-player/__pycache__" && rm -rf "$HOME/musicsv-player" && git clone https://github.com/willyhorizont/musicsv-player.git
 
-mkdir -p "$HOME/storage/music/musicsv-playlist" && cp -f "$HOME/musicsv-player/"*.csv "$HOME/storage/music/musicsv-playlist/"
+PL_LOC="$HOME/storage/music/musicsv-playlist"
+mkdir -p "$PL_LOC" && cp -f "$HOME/musicsv-player/"*.csv "$PL_LOC/"
 
-musicsv "$HOME/storage/music/musicsv-playlist/example.csv" --rptall --shuf
+musicsv "$PL_LOC/example.csv" --rptall --shuf
 ```
 
 ## Usage

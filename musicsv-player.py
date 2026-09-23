@@ -176,7 +176,7 @@ def prt_scrn(stdscr, actv_stp):
     if fp:
         disp_fp = fp.replace(os.environ.get("HOME", ""), "$HOME")
 
-    abt = 'github.com/willyhorizont/MusiCSV-Player/tree/0.2.1'
+    abt = 'github.com/willyhorizont/MusiCSV-Player/tree/0.2.2'
     stdscr.addstr(f"{abt}\n")
     prt_sep("-")
     
@@ -410,7 +410,7 @@ def main(stdscr):
                 continue
                 
     stdscr.erase()
-    stdscr.addstr("\nPlaying queue is done!\n")
+    stdscr.addstr("Playing queue is done!\n")
     stdscr.refresh()
     time.sleep(1)
 

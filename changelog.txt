@@ -1,3 +1,6 @@
+[Last updated: 23 Sep 2026 @ 10:04 AM][version: 0.2.2]
+cleanup oldversion;
+
 [Last updated: 23 Sep 2026 @ 08:12 AM][version: 0.2.1]
 add infinite scroll wrap-around feature;
 
