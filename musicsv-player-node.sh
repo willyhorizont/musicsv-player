@@ -20,16 +20,52 @@ is_rptone="False"
 is_shuf="False"
 shw_pl="False"
 is_scrn_pau="False"
+frc_cat=""
 declare -a sgs=() lns=() reqry_offsets=()
-
 for arg in "$@"; do
     [[ "$arg" == "--rptall" ]] && is_rptall="True" && continue
     [[ "$arg" == "--rptone" ]] && is_rptone="True" && continue
     [[ "$arg" == "--shuf" ]] && is_shuf="True" && continue
     [[ "$arg" == "--shwpl" ]] && shw_pl="True" && continue
+    
+    if [[ "$arg" =~ ^--cat= ]]; then
+        frc_cat="${arg#*=}"
+        continue
+    elif [[ "$arg" == "--cat" ]]; then
+        frc_cat="TRCK_NXT_ARG"
+        continue
+    fi
+    if [ "$frc_cat" == "TRCK_NXT_ARG" ]; then
+        frc_cat="$arg"
+        continue
+    fi
+    
     [[ "$arg" =~ ^-- ]] && continue
     [ -z "$fp" ] && fp="$arg" || { [[ ! "$arg" =~ ^[[:space:]]*# ]] && lns+=("$arg"); }
 done
+
+if [ -n "$frc_cat" ]; then
+    if [[ "$frc_cat" =~ ^(socat|netcat|builtin)$ ]]; then
+        if [ "$frc_cat" == "netcat" ]; then
+            SOC_CH="netcat"
+        elif [ "$frc_cat" == "socat" ]; then
+            SOC_CH="socat"
+        else
+            SOC_CH="builtin"
+        fi
+    else
+        echo "Error! Unknown socket option '$frc_cat'. Choose: socat, netcat, or builtin."
+        exit 1
+    fi
+else
+    if command -v socat >/dev/null 2>&1; then
+        SOC_CH="socat"
+    elif command -v nc >/dev/null 2>&1; then
+        SOC_CH="netcat"
+    else
+        SOC_CH="builtin"
+    fi
+fi
 
 if [ -n "$fp" ]; then
     [[ ! -f "$fp" ]] && { echo "Error! file not found in: $fp"; exit 1; }
@@ -130,7 +166,7 @@ prt_ui() {
 
     local mx_w=$MX_W
 
-    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.28'
+    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.2.0'
     printf "%s\033[K\n" "$abt"
     prt_sep "-"
     printf "%s\033[K\n" "$(get_anm_chnk "Query: " "${lns[$cur_idx]}" $mx_w)"
@@ -201,13 +237,39 @@ prt_ui() {
 
 q_prop() {
     if [ -S "$IPC_SOCK" ]; then
-        python3 "$RD/builtinsocket.py" --get-prop "$IPC_SOCK" <<< "$1" 2>/dev/null
+        if [ "$SOC_CH" = "socat" ]; then
+            local cmd_pld
+            cmd_pld=$(node "$RD/mpv-util.js" --get-prop <<< "$1" 2>/dev/null)
+            if [ -n "$cmd_pld" ]; then
+                local raw_j
+                raw_j=$(socat -t 1 - "UNIX-CONNECT:$IPC_SOCK" 2>/dev/null <<< "$cmd_pld")
+                if [ -n "$raw_j" ]; then
+                    node "$RD/mpv-util.js" --parse-prop <<< "$raw_j" 2>/dev/null
+                fi
+            fi
+        elif [ "$SOC_CH" = "netcat" ]; then
+            local req="{\"command\":[\"get_property\",\"$1\"]}"
+            local res=$(echo "$req" | nc -U "$IPC_SOCK" -w 1 -N 2>/dev/null)
+            if [ -n "$res" ]; then
+                node "$RD/mpv-util.js" --parse-prop <<< "$res" 2>/dev/null
+            fi
+        else
+            node "$RD/builtinsocket.js" --get-prop "$IPC_SOCK" <<< "$1" 2>/dev/null
+        fi
     fi
 }
 
 send_mpv_cmd() {
     if [ -S "$IPC_SOCK" ]; then
-        python3 "$RD/builtinsocket.py" --send-cmd "$IPC_SOCK" <<< "$1" 2>/dev/null
+        if [ "$SOC_CH" = "socat" ]; then
+            local cmd_pld
+            cmd_pld=$(node "$RD/mpv-util.js" --send-cmd <<< "$1" 2>/dev/null)
+            [ -n "$cmd_pld" ] && socat -t 1 - "UNIX-CONNECT:$IPC_SOCK" >/dev/null 2>&1 <<< "$cmd_pld"
+        elif [ "$SOC_CH" = "netcat" ]; then
+            echo "{\"command\":$1}" | nc -U "$IPC_SOCK" -w 1 -N >/dev/null 2>&1
+        else
+            node "$RD/builtinsocket.js" --send-cmd "$IPC_SOCK" <<< "$1" 2>/dev/null
+        fi
     fi
 }
 
@@ -229,10 +291,8 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
     mpv --no-video --ytdl-format=ba --msg-level=all=no --ytdl-raw-options-append=compat-options=no-live-chat --demuxer-lavf-o=reconnect=1,reconnect_at_eof=1,reconnect_streamed=1,reconnect_delay_max=5 --input-ipc-server="$IPC_SOCK" "${sgs[$cur_idx]}" >/dev/null 2>&1 &
     mpv_pid=$!
     ANM_TICK=0
-
     while kill -0 "$mpv_pid" 2>/dev/null; do
         read -s -n1 -t 0.1 k_inp; r_stat=$?
-        
         if [ $r_stat -eq 0 ]; then
             case "$k_inp" in
                 0) act_sig="exit"; kill "$mpv_pid" 2>/dev/null; break ;;
@@ -327,7 +387,19 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
         [ -z "$u_val" ] && u_val=$(q_prop "uploader")
         [ -n "$u_val" ] && cur_upl="$u_val"
         if [ "$shw_pl" == "False" ] && [ -S "$IPC_SOCK" ]; then
-            c_bytes=$(python3 "$RD/builtinsocket.py" --cache-bytes "$IPC_SOCK" 2>/dev/null)
+            if [ "$SOC_CH" = "socat" ]; then
+                cac_j=$(socat -t 1 - "UNIX-CONNECT:$IPC_SOCK" 2>/dev/null <<< '{"command":["get_property","demuxer-cache-state"]}')
+                if [ -n "$cac_j" ]; then
+                    c_bytes=$(node "$RD/mpv-util.js" --cache-bytes <<< "$cac_j" 2>/dev/null)
+                fi
+            elif [ "$SOC_CH" = "netcat" ]; then
+                cac_j=$(echo '{"command":["get_property","demuxer-cache-state"]}' | nc -U "$IPC_SOCK" -w 1 -N 2>/dev/null)
+                if [ -n "$cac_j" ]; then
+                    c_bytes=$(node "$RD/mpv-util.js" --cache-bytes <<< "$cac_j" 2>/dev/null)
+                fi
+            else
+                c_bytes=$(node "$RD/builtinsocket.js" --cache-bytes "$IPC_SOCK" 2>/dev/null)
+            fi
             if [ -n "$c_bytes" ] && [[ "$c_bytes" =~ ^[0-9]+$ ]] && [ "$c_bytes" -gt 0 ]; then
                 cur_sz="$((c_bytes / 1024 / 1024))MB"
             else

@@ -2,7 +2,7 @@
 
 SD=$(dirname "$(realpath "$0")")
 RD=$(realpath "$SD/..")
-V="0.1.28" # ! DON'T FORGET TO CHANGE VERSION BEFORE RUNNING !!!!
+V="0.2.0" # ! DON'T FORGET TO CHANGE VERSION BEFORE RUNNING !!!!
 T=$(date "+%d %b %Y @ %I:%M %p")
 cd "$RD" || exit
 
@@ -12,15 +12,14 @@ H="
 H=$(sed -e '/./,$!d' <<< "$H")
 # ! DON'T FORGET TO CHANGE COMMIT MESSAGE BEFORE RUNNING !!!!
 M="
-make socket agnostic between socat netcat and python-builtin;
-testing nodejs version;
+rewrite to python + ncurses;
 "
 M=$(sed -e '/./,$!d' <<< "$M")
 M="$H
 $M"
 awk -v msg="$M" 'BEGIN {print msg; print ""} {print}' "$RD/changelog.txt" > "$RD/changelog.tmp" && mv "$RD/changelog.tmp" "$RD/changelog.txt"
 
-sed -i "s|github.com/willyhorizont/MusiCSV-Player/tree/[0-9.]*|github.com/willyhorizont/MusiCSV-Player/tree/$V|g" "$RD/musicsv-player"*.sh
+sed -i "s|github.com/willyhorizont/MusiCSV-Player/tree/[0-9.]*|github.com/willyhorizont/MusiCSV-Player/tree/$V|g" "$RD/musicsv-player"*.py
 
 git add changelog.txt
 git add .

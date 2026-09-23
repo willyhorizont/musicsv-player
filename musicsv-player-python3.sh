@@ -20,23 +20,52 @@ is_rptone="False"
 is_shuf="False"
 shw_pl="False"
 is_scrn_pau="False"
+frc_cat=""
 declare -a sgs=() lns=() reqry_offsets=()
-if command -v socat >/dev/null 2>&1; then
-    SOC_CH="socat"
-elif command -v nc >/dev/null 2>&1; then
-    SOC_CH="netcat"
-else
-    SOC_CH="builtin"
-fi
-
 for arg in "$@"; do
     [[ "$arg" == "--rptall" ]] && is_rptall="True" && continue
     [[ "$arg" == "--rptone" ]] && is_rptone="True" && continue
     [[ "$arg" == "--shuf" ]] && is_shuf="True" && continue
     [[ "$arg" == "--shwpl" ]] && shw_pl="True" && continue
+    
+    if [[ "$arg" =~ ^--cat= ]]; then
+        frc_cat="${arg#*=}"
+        continue
+    elif [[ "$arg" == "--cat" ]]; then
+        frc_cat="TRCK_NXT_ARG"
+        continue
+    fi
+    if [ "$frc_cat" == "TRCK_NXT_ARG" ]; then
+        frc_cat="$arg"
+        continue
+    fi
+    
     [[ "$arg" =~ ^-- ]] && continue
     [ -z "$fp" ] && fp="$arg" || { [[ ! "$arg" =~ ^[[:space:]]*# ]] && lns+=("$arg"); }
 done
+
+if [ -n "$frc_cat" ]; then
+    if [[ "$frc_cat" =~ ^(socat|netcat|builtin)$ ]]; then
+        if [ "$frc_cat" == "netcat" ]; then
+            SOC_CH="netcat"
+        elif [ "$frc_cat" == "socat" ]; then
+            SOC_CH="socat"
+        else
+            SOC_CH="builtin"
+        fi
+    else
+        echo "Error! Unknown socket option '$frc_cat'. Choose: socat, netcat, or builtin."
+        exit 1
+    fi
+else
+    if command -v socat >/dev/null 2>&1; then
+        SOC_CH="socat"
+    elif command -v nc >/dev/null 2>&1; then
+        SOC_CH="netcat"
+    else
+        SOC_CH="builtin"
+    fi
+fi
 
 if [ -n "$fp" ]; then
     [[ ! -f "$fp" ]] && { echo "Error! file not found in: $fp"; exit 1; }
@@ -137,7 +166,7 @@ prt_ui() {
 
     local mx_w=$MX_W
 
-    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.1.28'
+    abt='github.com/willyhorizont/MusiCSV-Player/tree/0.2.0'
     printf "%s\033[K\n" "$abt"
     prt_sep "-"
     printf "%s\033[K\n" "$(get_anm_chnk "Query: " "${lns[$cur_idx]}" $mx_w)"
@@ -262,10 +291,8 @@ while [ $i -lt ${#sgs[@]} ] && [ $i -ge 0 ]; do
     mpv --no-video --ytdl-format=ba --msg-level=all=no --ytdl-raw-options-append=compat-options=no-live-chat --demuxer-lavf-o=reconnect=1,reconnect_at_eof=1,reconnect_streamed=1,reconnect_delay_max=5 --input-ipc-server="$IPC_SOCK" "${sgs[$cur_idx]}" >/dev/null 2>&1 &
     mpv_pid=$!
     ANM_TICK=0
-
     while kill -0 "$mpv_pid" 2>/dev/null; do
         read -s -n1 -t 0.1 k_inp; r_stat=$?
-        
         if [ $r_stat -eq 0 ]; then
             case "$k_inp" in
                 0) act_sig="exit"; kill "$mpv_pid" 2>/dev/null; break ;;

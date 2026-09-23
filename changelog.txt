@@ -1,3 +1,6 @@
+[Last updated: 23 Sep 2026 @ 07:26 AM][version: 0.2.0]
+rewrite to python + ncurses;
+
 [Last updated: 23 Sep 2026 @ 05:38 AM][version: 0.1.28]
 make socket agnostic between socat netcat and python-builtin;
 testing nodejs version;

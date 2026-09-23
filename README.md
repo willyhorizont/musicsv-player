@@ -8,7 +8,7 @@ No more storing songs in mp3s, no more storing songs playlists in cloud services
 ```bash
 docker rmi willyhorizont/musicv-player
 
-sed -i '/alias musicsv=/d' ~/.bashrc && echo "alias musicsv='export PYTHONDONTWRITEBYTECODE=1; \$HOME/musicsv-player/run.sh \$HOME/musicsv-player/musicsv-player.sh'" >> ~/.bashrc
+sed -i '/alias musicsv=/d' ~/.bashrc && echo "alias musicsv='export PYTHONDONTWRITEBYTECODE=1; \$HOME/musicsv-player/run.sh \$HOME/musicsv-player/musicsv-player.py'" >> ~/.bashrc
 source ~/.bashrc
 
 rm -rf "$HOME/musicsv-player" && git clone https://github.com/willyhorizont/musicsv-player.git
@@ -30,7 +30,7 @@ termux-setup-storage
 sed -i '/volume-keys =/d' ~/.termux/termux.properties && echo "volume-keys = volume" >> ~/.termux/termux.properties
 termux-reload-settings
 
-sed -i '/alias musicsv=/d' ~/.bashrc && echo "alias musicsv='export PYTHONDONTWRITEBYTECODE=1; \$HOME/musicsv-player/musicsv-player.sh'" >> ~/.bashrc
+sed -i '/alias musicsv=/d' ~/.bashrc && echo "alias musicsv='export PYTHONDONTWRITEBYTECODE=1; \$HOME/musicsv-player/musicsv-player.py'" >> ~/.bashrc
 source ~/.bashrc
 
 rm -rf "$HOME/musicsv-player" && git clone https://github.com/willyhorizont/musicsv-player.git
@@ -49,5 +49,5 @@ musicsv "$HOME/Music/your-playlist.csv" --loop --shuffle
 ---
 **Great projects behind this:**  
 * [ffmpeg](https://github.com/ffmpeg/ffmpeg)  
-* [mpv-player](https://github.com/mpv-player/mpv)  
+* [mpv](https://github.com/mpv-player/mpv)  
 * [yt-dlp](https://github.com/yt-dlp/yt-dlp)  
