@@ -1,3 +1,6 @@
+[Last updated: 24 Sep 2026 @ 02:42 PM][version: 0.2.6]
+update screenshot;
+
 [Last updated: 24 Sep 2026 @ 02:33 PM][version: 0.2.5]
 update install command;
 
