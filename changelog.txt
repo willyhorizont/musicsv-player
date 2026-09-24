@@ -1,3 +1,8 @@
+[Last updated: 24 Sep 2026 @ 07:01 AM][version: 0.2.3]
+update README.md and notes;
+remove requery and toggle show list and make list always visible;
+add minw minh;
+
 [Last updated: 23 Sep 2026 @ 10:04 AM][version: 0.2.2]
 cleanup oldversion;
 

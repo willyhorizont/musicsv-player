@@ -12,10 +12,9 @@ sed -i '/alias musicsv=/d' ~/.bashrc && echo "alias musicsv='export PYTHONDONTWR
 
 sudo rm -rf "$HOME/musicsv-player/__pycache__" && rm -rf "$HOME/musicsv-player" && git clone https://github.com/willyhorizont/musicsv-player.git
 
-PL_LOC="$HOME/Music/musicsv-playlist"
-mkdir -p "$PL_LOC" && cp -f "$HOME/musicsv-player/"*.csv "$PL_LOC/"
+mkdir -p "$HOME/Music/musicsv-playlist" && cp -f "$HOME/musicsv-player/"*.csv "$HOME/Music/musicsv-playlist/"
 
-musicsv "$PL_LOC/example.csv" --rptall --shuf
+musicsv "$HOME/Music/musicsv-playlist/example.csv" --rptall --shuf
 ```
 
 ## Installation/Updates (Termux)
@@ -33,10 +32,9 @@ sed -i '/alias musicsv=/d' ~/.bashrc && echo "alias musicsv='export PYTHONDONTWR
 
 sudo rm -rf "$HOME/musicsv-player/__pycache__" && rm -rf "$HOME/musicsv-player" && git clone https://github.com/willyhorizont/musicsv-player.git
 
-PL_LOC="$HOME/storage/music/musicsv-playlist"
-mkdir -p "$PL_LOC" && cp -f "$HOME/musicsv-player/"*.csv "$PL_LOC/"
+mkdir -p "$HOME/storage/music/musicsv-playlist" && cp -f "$HOME/musicsv-player/"*.csv "$HOME/storage/music/musicsv-playlist/"
 
-musicsv "$PL_LOC/example.csv" --rptall --shuf
+musicsv "$HOME/storage/music/musicsv-playlist/example.csv" --rptall --shuf
 ```
 
 ## Usage
