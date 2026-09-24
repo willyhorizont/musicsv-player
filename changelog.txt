@@ -1,3 +1,6 @@
+[Last updated: 24 Sep 2026 @ 02:33 PM][version: 0.2.5]
+update install command;
+
 [Last updated: 24 Sep 2026 @ 07:08 AM][version: 0.2.4]
 fix padding;
 

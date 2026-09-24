@@ -10,7 +10,7 @@ docker rmi willyhorizont/musicv-player
 
 sed -i '/alias musicsv=/d' ~/.bashrc && echo "alias musicsv='export PYTHONDONTWRITEBYTECODE=1; \$HOME/musicsv-player/runner.sh \$HOME/musicsv-player/musicsv-player.sh'" >> ~/.bashrc && source ~/.bashrc
 
-sudo rm -rf "$HOME/musicsv-player/__pycache__" && rm -rf "$HOME/musicsv-player" && git clone https://github.com/willyhorizont/musicsv-player.git
+rm -rf "$HOME/musicsv-player" && git clone https://github.com/willyhorizont/musicsv-player.git
 
 mkdir -p "$HOME/Music/musicsv-playlist" && cp -f "$HOME/musicsv-player/"*.csv "$HOME/Music/musicsv-playlist/"
 
@@ -30,7 +30,7 @@ termux-reload-settings
 
 sed -i '/alias musicsv=/d' ~/.bashrc && echo "alias musicsv='export PYTHONDONTWRITEBYTECODE=1; \$HOME/musicsv-player/musicsv-player.sh'" >> ~/.bashrc && source ~/.bashrc
 
-sudo rm -rf "$HOME/musicsv-player/__pycache__" && rm -rf "$HOME/musicsv-player" && git clone https://github.com/willyhorizont/musicsv-player.git
+rm -rf "$HOME/musicsv-player" && git clone https://github.com/willyhorizont/musicsv-player.git
 
 mkdir -p "$HOME/storage/music/musicsv-playlist" && cp -f "$HOME/musicsv-player/"*.csv "$HOME/storage/music/musicsv-playlist/"
 
