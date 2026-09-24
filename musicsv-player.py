@@ -180,8 +180,8 @@ def prt_scrn(stdscr, actv_stp):
     if fp:
         disp_fp = fp.replace(os.environ.get("HOME", ""), "$HOME")
 
-    abt = 'github.com/willyhorizont/MusiCSV-Player/tree/0.2.3'
-    stdscr.addstr(f"{abt}")
+    abt = 'github.com/willyhorizont/MusiCSV-Player/tree/0.2.4'
+    stdscr.addstr(abt.ljust(mx_w))
     prt_sep()
     
     rl_idx = ord_idx[actv_stp]
@@ -191,7 +191,7 @@ def prt_scrn(stdscr, actv_stp):
     prt_sep()
     stdscr.addstr(get_anm_chnk("Uploader: ", cur_upl, mx_w))
     prt_sep()
-    stdscr.addstr(f"Size: {cur_sz} | Duration: {cur_prog}")
+    stdscr.addstr(f"Size: {cur_sz} | Duration: {cur_prog}".ljust(mx_w))
     prt_sep()
     stdscr.addstr(get_anm_chnk("Playlist: ", f'"{disp_fp}"', mx_w))
     
@@ -213,11 +213,11 @@ def prt_scrn(stdscr, actv_stp):
             if idx < end_win and idx < (tot_lns - 1):
                 prt_sep()
     prt_sep("=")
-    stdscr.addstr(f"RptOne:{'Ya' if is_rptone else 'No'} | RptAll:{'Ya' if is_rptall else 'No'} | Shuf:{'Ya' if is_shuf else 'No'} | ScrnPau: {'Ya' if is_scrn_pau else 'No'}\n")
-    stdscr.addstr("[0]=[Ext] [1]=[RptOne] [2]=[RptAll] [3]=[Shuf]\n")
-    stdscr.addstr("[A]=[SongRewnd] [S]=[SongFrwd] [Z]=[SongRsm/SongPau]\n")
-    stdscr.addstr("[T]=[PtrUp] [O]=[SongPrv] [P]=[SongNxt]\n")
-    stdscr.addstr("[F]=[PtrDwn] [U]=[PtrSel] [B]=[ScrnPau]\n")
+    stdscr.addstr(f"RptOne:{'Ya' if is_rptone else 'No'} | RptAll:{'Ya' if is_rptall else 'No'} | Shuf:{'Ya' if is_shuf else 'No'} | ScrnPau: {'Ya' if is_scrn_pau else 'No'}".ljust(mx_w))
+    stdscr.addstr("[0]=[Ext] [1]=[RptOne] [2]=[RptAll] [3]=[Shuf]".ljust(mx_w))
+    stdscr.addstr("[A]=[SongRewnd] [S]=[SongFrwd] [Z]=[SongRsm/SongPau]".ljust(mx_w))
+    stdscr.addstr("[T]=[PtrUp] [O]=[SongPrv] [P]=[SongNxt]".ljust(mx_w))
+    stdscr.addstr("[F]=[PtrDwn] [U]=[PtrSel] [B]=[ScrnPau]".ljust(mx_w))
     stdscr.refresh()
 
 def main(stdscr):
