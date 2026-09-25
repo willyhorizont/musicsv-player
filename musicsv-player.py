@@ -180,7 +180,7 @@ def prt_scrn(stdscr, actv_stp):
     if fp:
         disp_fp = fp.replace(os.environ.get("HOME", ""), "$HOME")
 
-    abt = 'github.com/willyhorizont/MusiCSV-Player/tree/0.2.6'
+    abt = 'github.com/willyhorizont/MusiCSV-Player/tree/0.2.7'
     stdscr.addstr(abt.ljust(mx_w))
     prt_sep()
     
@@ -371,7 +371,8 @@ def main(stdscr):
         elif act_sig == "prev":
             if i > 0: i -= 1
             else:
-                stdscr.addstr("\n[!] First track!\n")
+                stdscr.erase()
+                stdscr.addstr("First track!")
                 stdscr.refresh()
                 time.sleep(0.5)
             sel_ptr = i
