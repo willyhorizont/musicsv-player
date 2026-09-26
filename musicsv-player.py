@@ -29,10 +29,16 @@ pl_scrl = 0
 anm_tick = 0
 ipc_tick = 0
 
-cur_tit = "Loading title..."
-cur_upl = "Loading uploader info..."
-cur_sz = "0MB"
-cur_prog = "00:00:00 / 00:00:00"
+init_tit = "Loading title..."
+init_upl = "Loading uploader info..."
+init_sz = "0MB"
+init_tm_pos = "00:00:00"
+init_dur = "00:00:00"
+cur_tit = init_tit
+cur_upl = init_upl
+cur_sz = init_sz
+cur_tm_pos = init_tm_pos
+cur_dur = init_dur
 
 args = sys.argv[1:]
 for arg in args:
@@ -161,7 +167,7 @@ def get_anm_chnk(lb, full_txt, mx_w):
         return f"{lb}{pd_txt[sta_pos:sta_pos+chnk_sz]}".ljust(mx_w)[:mx_w]
 
 def prt_scrn(stdscr, actv_stp):
-    global cur_sz, cur_prog, cur_tit, cur_upl
+    global cur_sz, cur_tm_pos, cur_dur, cur_tit, cur_upl
     stdscr.erase()
     mx_y, mx_x = stdscr.getmaxyx()
     
@@ -180,7 +186,7 @@ def prt_scrn(stdscr, actv_stp):
     if fp:
         disp_fp = fp.replace(os.environ.get("HOME", ""), "$HOME")
 
-    abt = 'github.com/willyhorizont/MusiCSV-Player/tree/0.2.7'
+    abt = 'github.com/willyhorizont/MusiCSV-Player/tree/0.2.8'
     stdscr.addstr(abt.ljust(mx_w))
     prt_sep()
     
@@ -191,7 +197,7 @@ def prt_scrn(stdscr, actv_stp):
     prt_sep()
     stdscr.addstr(get_anm_chnk("Uploader: ", cur_upl, mx_w))
     prt_sep()
-    stdscr.addstr(f"Size: {cur_sz} | Duration: {cur_prog}".ljust(mx_w))
+    stdscr.addstr(f"{cur_tm_pos} / {cur_dur} @ {cur_sz}".ljust(mx_w))
     prt_sep()
     stdscr.addstr(get_anm_chnk("Playlist: ", f'"{disp_fp}"', mx_w))
     
@@ -208,7 +214,8 @@ def prt_scrn(stdscr, actv_stp):
         if 0 <= idx < tot_lns:
             p_now = ">" if idx == actv_stp else " "
             p_sel = "*" if idx == sel_ptr else " "
-            prefx = f"{p_now}{p_sel}; {idx + 1} ; "
+            idx_p = f"{idx + 1}".rjust(len(f"{tot_lns}"))
+            prefx = f"{p_now}{p_sel}|{idx_p}|"
             stdscr.addstr(get_anm_chnk(prefx, lns[ord_idx[idx]], mx_w))
             if idx < end_win and idx < (tot_lns - 1):
                 prt_sep()
@@ -223,7 +230,7 @@ def prt_scrn(stdscr, actv_stp):
 def main(stdscr):
     global is_rptone, is_rptall, is_shuf, is_scrn_pau
     global sel_ptr, pl_scrl, anm_tick, ipc_tick
-    global cur_tit, cur_upl, cur_sz, cur_prog
+    global cur_tit, cur_upl, cur_sz, cur_tm_pos, cur_dur
     
     curses.curs_set(0)
     stdscr.nodelay(True)
@@ -236,10 +243,11 @@ def main(stdscr):
     while 0 <= i < len(sgs):
         cur_idx = ord_idx[i]
         act_sig = "none"
-        cur_tit = "Loading title..."
-        cur_upl = "Loading uploader info..."
-        cur_sz = "0MB"
-        cur_prog = "00:00:00 / 00:00:00"
+        cur_tit = init_tit
+        cur_upl = init_upl
+        cur_sz = init_sz
+        cur_tm_pos = init_tm_pos
+        cur_dur = init_dur
         is_scrn_pau = False
         
         if os.path.exists(IPC_SOCK):
@@ -340,11 +348,12 @@ def main(stdscr):
                 
                 c_bytes = ftch_cac_bytes()
                 if c_bytes > 0: cur_sz = f"{c_bytes // (1024 * 1024)}MB"
-                else: cur_sz = "0MB"
+                else: cur_sz = init_sz
                 tmpos = q_prop("time-pos")
                 dur = q_prop("duration")
                 if tmpos and dur and not tmpos.isalpha() and not dur.isalpha():
-                    cur_prog = f"{fmt_tm(tmpos)} / {fmt_tm(dur)}"
+                    cur_tm_pos = fmt_tm(tmpos)
+                    cur_dur = fmt_tm(dur)
                     
             if not is_scrn_pau:
                 anm_tick += 1

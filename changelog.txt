@@ -1,3 +1,6 @@
+[Last updated: 26 Sep 2026 @ 02:35 PM][version: 0.2.8]
+small UI update;
+
 [Last updated: 26 Sep 2026 @ 05:34 AM][version: 0.2.7]
 update previous song msg;
 
