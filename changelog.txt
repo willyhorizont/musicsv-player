@@ -1,3 +1,7 @@
+[Last updated: 28 Sep 2026 @ 04:03 PM][version: 0.2.9]
+update install location;
+add sync.sh;
+
 [Last updated: 26 Sep 2026 @ 02:35 PM][version: 0.2.8]
 small UI update;
 
