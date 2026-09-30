@@ -40,3 +40,5 @@ docker run -it --rm \
     -v "$SCRIPT_DIR:$SCRIPT_DIR" \
     "$IMG" \
     bash "$ABS_SCRIPT_PATH" "$@"
+
+sudo systemctl stop --no-block docker.service containerd.service 2>/dev/null
