@@ -2,7 +2,7 @@
 
 SD=$(dirname "$(realpath "$0")")
 RD=$(realpath "$SD/..")
-V="0.2.10" # ! DON'T FORGET TO CHANGE VERSION BEFORE RUNNING !!!!
+V="0.2.11" # ! DON'T FORGET TO CHANGE VERSION BEFORE RUNNING !!!!
 T=$(date "+%d %b %Y @ %I:%M %p")
 cd "$RD" || exit
 
@@ -12,7 +12,8 @@ H="
 H=$(sed -e '/./,$!d' <<< "$H")
 # ! DON'T FORGET TO CHANGE COMMIT MESSAGE BEFORE RUNNING !!!!
 M="
-add stop docker.service containerd.service;
+update stop docker container command;
+small update in musicsv-player-oldversion.sh;
 "
 M=$(sed -e '/./,$!d' <<< "$M")
 M="$H

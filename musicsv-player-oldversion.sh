@@ -150,8 +150,8 @@ pl_scrl=0
 sel_ptr=0
 
 MX_W=$(( COLUMNS - 3 ))
-[ -z "$MX_W" ] || [ "$MX_W" -le 0 ] && MX_W=$(( $(tput cols 2>/dev/null || echo 56) - 3 ))
-trap 'MX_W=$(( $(tput cols 2>/dev/null || echo 56) - 3 ))' SIGWINCH
+[ -z "$MX_W" ] || [ "$MX_W" -le 0 ] && MX_W=$(( $(tput cols 2>/dev/null || echo 54) - 3 ))
+trap 'MX_W=$(( $(tput cols 2>/dev/null || echo 54) - 3 ))' SIGWINCH
 
 prt_sep() {
     printf '%*s' "$MX_W" '' | tr ' ' "${1:-=}" ; printf "\033[K\n"

@@ -23,7 +23,7 @@ if ! docker image inspect "$IMG" > /dev/null 2>&1; then
         "$RD"
 fi
 
-HOST_COLS=$(tput cols 2>/dev/null || echo 80)
+HOST_COLS=$(tput cols 2>/dev/null || echo 54)
 HOST_LINES=$(tput lines 2>/dev/null || echo 24)
 
 docker run -it --rm \
@@ -41,4 +41,5 @@ docker run -it --rm \
     "$IMG" \
     bash "$ABS_SCRIPT_PATH" "$@"
 
-sudo systemctl stop --no-block docker.service containerd.service 2>/dev/null
+sudo -p "$L
+Enter password to stop docker container: " systemctl stop --no-block docker.service containerd.service 2>/dev/null

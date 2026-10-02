@@ -1,3 +1,7 @@
+[Last updated: 03 Oct 2026 @ 02:20 AM][version: 0.2.11]
+update stop docker container command;
+small update in musicsv-player-oldversion.sh;
+
 [Last updated: 30 Sep 2026 @ 10:51 PM][version: 0.2.10]
 add stop docker.service containerd.service;
 

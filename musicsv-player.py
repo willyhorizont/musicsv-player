@@ -186,7 +186,7 @@ def prt_scrn(stdscr, actv_stp):
     if fp:
         disp_fp = fp.replace(os.environ.get("HOME", ""), "$HOME")
 
-    abt = 'github.com/willyhorizont/MusiCSV-Player/tree/0.2.10'
+    abt = 'github.com/willyhorizont/MusiCSV-Player/tree/0.2.11'
     stdscr.addstr(abt.ljust(mx_w))
     prt_sep()
     
